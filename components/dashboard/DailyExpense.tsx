@@ -1,16 +1,19 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChecklist } from "@/hooks/useChecklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, Wallet } from "lucide-react";
+import { TodayExpenseDialog } from "./TodayExpenseDialog";
 
 export function DailyExpense() {
   const router = useRouter();
   const { userData } = useAuth();
   const { dailyExpense } = useChecklist();
+  const [showExpenseDialog, setShowExpenseDialog] = useState(false);
 
   const isChild = userData?.role === "child";
 
@@ -47,15 +50,19 @@ export function DailyExpense() {
       </CardHeader>
       <CardContent>
         <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600">
+          <button
+            onClick={() => setShowExpenseDialog(true)}
+            className="text-3xl font-bold text-blue-600 hover:underline cursor-pointer"
+          >
             ₩{dailyExpense.toLocaleString()}
-          </div>
+          </button>
           <p className="text-sm text-gray-500 mt-1">오늘 사용한 금액</p>
           <p className="text-xs text-gray-400 mt-2">
-            오늘의 소비금액은 자녀가 입력합니다.
+            💡 금액을 클릭하면 내역을 볼 수 있습니다.
           </p>
         </div>
       </CardContent>
+      <TodayExpenseDialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog} />
     </Card>
   );
 }
