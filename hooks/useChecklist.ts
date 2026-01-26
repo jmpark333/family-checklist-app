@@ -17,30 +17,51 @@ export function useChecklist() {
 
   const familyId = userData?.familyId;
 
-  // 체크리스트 데이터 로드 - familyId 기반으로 변경
+  // 체크리스트 데이터 로드 - familyId 기반 + 하위 호환성
   useEffect(() => {
-    if (!familyId) return;
+    if (!familyId || !currentUser) return;
 
     const todayKey = getTodayKey();
     const checklistRef = doc(db, "checklists", todayKey);
 
+    console.log("[체크리스트 로드] familyId:", familyId, "currentUser.uid:", currentUser.uid);
+
     const unsubscribe = onSnapshot(
       checklistRef,
-      (docSnap) => {
+      async (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const familyChecklist = data[familyId] as DailyChecklist;
+          console.log("[체크리스트 데이터] 문서 키들:", Object.keys(data));
+          console.log("[체크리스트 데이터] familyId 데이터 존재?", !!data[familyId]);
+
+          let familyChecklist = data[familyId] as DailyChecklist;
+
+          // familyId로 데이터가 없고, currentUser.uid로 데이터가 있으면 마이그레이션
+          if (!familyChecklist && data[currentUser.uid]) {
+            console.log("마이그레이션: userId 기반 데이터를 familyId로 복사");
+            const userData = data[currentUser.uid] as DailyChecklist;
+
+            // familyId 키로 데이터 복사
+            await updateDoc(checklistRef, {
+              [familyId]: userData
+            });
+
+            familyChecklist = userData;
+          }
+
           if (familyChecklist) {
+            console.log("[체크리스트 성공] 데이터 로드됨, 항목 수:", familyChecklist.items?.length);
             setChecklist(familyChecklist.items || []);
             setEvents(familyChecklist.events || []);
-            // dailyExpense는 이제 ledger 트랜잭션에서 계산하므로 여기서는 사용하지 않음
           } else {
             // 초기 데이터 생성
-            initializeDefaultData();
+            console.log("[체크리스트] familyId 데이터 없음, 초기 데이터 생성");
+            await initializeDefaultData();
           }
         } else {
           // 문서가 없으면 초기 데이터 생성
-          initializeDefaultData();
+          console.log("[체크리스트] 문서 없음, 초기 데이터 생성");
+          await initializeDefaultData();
         }
         setLoading(false);
       },
@@ -51,7 +72,7 @@ export function useChecklist() {
     );
 
     return () => unsubscribe();
-  }, [familyId]);
+  }, [familyId, currentUser]);
 
   // 가계부 트랜잭션에서 오늘의 지출 계산
   useEffect(() => {

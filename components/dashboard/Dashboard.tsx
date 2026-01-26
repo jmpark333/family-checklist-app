@@ -12,6 +12,14 @@ import { DailyExpense } from "./DailyExpense";
 import { SettingsPage } from "../settings/SettingsPage";
 import { LogOut, Settings } from "lucide-react";
 
+// 개발 모드에서만 마이그레이션 함수 로드
+if (process.env.NODE_ENV === "development") {
+  import("@/lib/migrateFamily").then(() => {
+    console.log("%c[마이그레이션] migrateFamily 함수가 준비되었습니다.", "color: green; font-weight: bold");
+    console.log("사용법: await migrateFamily('rg327024@gmail.com', 'parkseun06@gmail.com')");
+  });
+}
+
 export function Dashboard() {
   const { userData, logout } = useAuth();
   const { currentBalance, pendingReward, loading: balanceLoading } = useCurrentBalance();
