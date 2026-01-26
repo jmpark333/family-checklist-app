@@ -42,7 +42,32 @@ export interface FamilySettings {
   resetDay: number; // 1-31 (월간 정산일)
 }
 
-// 트랜잭션
+// 카테고리 타입
+export type Category = "food" | "cafe" | "transport" | "shopping" | "bills" | "allowance" | "etc";
+
+// 가계부 트랜잭션 타입 (수입/지출 내역)
+export interface LedgerTransaction {
+  id: string;
+  familyId: string;
+  userId: string;           // 기록한 사람
+  date: string;             // YYYY-MM-DD
+  type: "income" | "expense";
+  category: Category;
+  amount: number;
+  memo: string;
+  createdAt: string;        // ISO timestamp
+}
+
+// 가계부 설정
+export interface HouseholdLedger {
+  familyId: string;
+  monthlyBudget: number;    // 월 예산
+  fixedExpense: number;     // 고정지출
+  initialBalance: number;   // 시작 잔액
+  currentBalance: number;   // 현재 잔액 (실시간 계산)
+}
+
+// 트랜잭션 (기존 호환성 유지)
 export interface Transaction {
   userId: string;
   date: string;
