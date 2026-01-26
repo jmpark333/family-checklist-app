@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc, updateDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, onSnapshot, query, where, orderBy, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTodayKey } from "@/lib/utils";
-import { ChecklistItem, DailyChecklist, Event } from "@/lib/types";
+import { ChecklistItem, DailyChecklist, Event, LedgerTransaction } from "@/lib/types";
 
 export function useChecklist() {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [dailyExpense, setDailyExpense] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  const familyId = userData?.familyId;
 
   // 체크리스트 데이터 로드
   useEffect(() => {
@@ -26,11 +28,11 @@ export function useChecklist() {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const userData = data[currentUser.uid] as DailyChecklist;
-          if (userData) {
-            setChecklist(userData.items || []);
-            setEvents(userData.events || []);
-            setDailyExpense(userData.dailyExpense || 0);
+          const userChecklist = data[currentUser.uid] as DailyChecklist;
+          if (userChecklist) {
+            setChecklist(userChecklist.items || []);
+            setEvents(userChecklist.events || []);
+            // dailyExpense는 이제 ledger 트랜잭션에서 계산하므로 여기서는 사용하지 않음
           } else {
             // 초기 데이터 생성
             initializeDefaultData();
@@ -49,6 +51,38 @@ export function useChecklist() {
 
     return () => unsubscribe();
   }, [currentUser]);
+
+  // 가계부 트랜잭션에서 오늘의 지출 계산
+  useEffect(() => {
+    if (!familyId) return;
+
+    const todayKey = new Date().toISOString().split("T")[0];
+
+    const q = query(
+      collection(db, "transactions"),
+      where("familyId", "==", familyId),
+      where("date", "==", todayKey),
+      where("type", "==", "expense")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const todayExpenses = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          ...data,
+          id: doc.id,
+        } as LedgerTransaction;
+      });
+
+      // 오늘 지출 합계 계산
+      const total = todayExpenses.reduce((sum, t) => sum + t.amount, 0);
+      setDailyExpense(total);
+    }, (error) => {
+      console.error("트랜잭션 로드 오류:", error);
+    });
+
+    return () => unsubscribe();
+  }, [familyId]);
 
   // 기본 데이터 초기화
   const initializeDefaultData = async () => {
