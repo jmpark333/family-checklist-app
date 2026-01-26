@@ -1,38 +1,71 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLedger } from "@/hooks/useLedger";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Category } from "@/lib/types";
+import { Category, LedgerTransaction } from "@/lib/types";
 import { CATEGORIES } from "@/hooks/useLedger";
 
 interface TransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editingTransaction?: LedgerTransaction | null;
 }
 
-export function TransactionDialog({ open, onOpenChange }: TransactionDialogProps) {
-  const { addTransaction } = useLedger();
+export function TransactionDialog({ open, onOpenChange, editingTransaction }: TransactionDialogProps) {
+  const { addTransaction, updateTransaction } = useLedger();
   const [type, setType] = useState<"income" | "expense">("expense");
   const [category, setCategory] = useState<Category>("food");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
 
+  const isEditing = !!editingTransaction;
+
+  // 수정 모드일 때 기존 데이터로 폼 채우기
+  useEffect(() => {
+    if (editingTransaction) {
+      setType(editingTransaction.type);
+      setCategory(editingTransaction.category);
+      setAmount(editingTransaction.amount.toString());
+      setMemo(editingTransaction.memo || "");
+      setDate(editingTransaction.date);
+    } else {
+      // 추가 모드일 때 초기화
+      setType("expense");
+      setCategory("food");
+      setAmount("");
+      setMemo("");
+      setDate(new Date().toISOString().split("T")[0]);
+    }
+  }, [editingTransaction, open]);
+
   const handleSubmit = async () => {
     const amountNum = Number(amount);
     if (!amountNum || amountNum <= 0) return;
 
-    await addTransaction({
-      date,
-      type,
-      category,
-      amount: amountNum,
-      memo,
-    });
+    if (isEditing && editingTransaction) {
+      // 수정 모드
+      await updateTransaction(editingTransaction.id, {
+        date,
+        type,
+        category,
+        amount: amountNum,
+        memo,
+      });
+    } else {
+      // 추가 모드
+      await addTransaction({
+        date,
+        type,
+        category,
+        amount: amountNum,
+        memo,
+      });
+    }
 
     // 초기화
     setAmount("");
@@ -45,7 +78,7 @@ export function TransactionDialog({ open, onOpenChange }: TransactionDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>내역 추가</DialogTitle>
+          <DialogTitle>{isEditing ? "내역 수정" : "내역 추가"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           {/* 구분 선택 */}

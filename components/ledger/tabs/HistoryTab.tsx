@@ -4,16 +4,36 @@ import { useState } from "react";
 import { useLedger } from "@/hooks/useLedger";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { TransactionDialog } from "../TransactionDialog";
 import { CATEGORIES } from "@/hooks/useLedger";
+import { LedgerTransaction } from "@/lib/types";
 
 type FilterType = "all" | "income" | "expense";
 
 export function HistoryTab() {
-  const { transactions } = useLedger();
+  const { transactions, deleteTransaction } = useLedger();
   const [filter, setFilter] = useState<FilterType>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<LedgerTransaction | null>(null);
+
+  const handleEdit = (transaction: LedgerTransaction) => {
+    setEditingTransaction(transaction);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("정말 삭제하시겠습니까?")) {
+      await deleteTransaction(id);
+    }
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (!open) {
+      setEditingTransaction(null);
+    }
+  };
 
   // 필터링된 내역
   const filteredTransactions = transactions.filter((t) => {
@@ -86,25 +106,43 @@ export function HistoryTab() {
                       key={item.id}
                       className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3 flex-1">
                         <span className="text-2xl">{cat.emoji}</span>
-                        <div>
+                        <div className="flex-1">
                           <p className="font-medium">
                             {item.memo || cat.label}
                           </p>
                           <p className="text-xs text-gray-500">{cat.label}</p>
                         </div>
                       </div>
-                      <span
-                        className={`font-bold ${
-                          item.type === "income"
-                            ? "text-blue-600"
-                            : "text-red-600"
-                        }`}
-                      >
-                        {item.type === "income" ? "+" : "-"}₩
-                        {item.amount.toLocaleString()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`font-bold ${
+                            item.type === "income"
+                              ? "text-blue-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {item.type === "income" ? "+" : "-"}₩
+                          {item.amount.toLocaleString()}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                          onClick={() => handleEdit(item)}
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-500 hover:text-red-600"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
@@ -122,7 +160,11 @@ export function HistoryTab() {
         <Plus className="w-6 h-6" />
       </button>
 
-      <TransactionDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      <TransactionDialog
+        open={isDialogOpen}
+        onOpenChange={handleDialogClose}
+        editingTransaction={editingTransaction}
+      />
     </div>
   );
 }

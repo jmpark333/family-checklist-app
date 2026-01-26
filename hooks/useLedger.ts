@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { collection, addDoc, updateDoc, doc, onSnapshot, query, where, orderBy, setDoc } from "firebase/firestore";
+import { collection, addDoc, updateDoc, doc, onSnapshot, query, where, orderBy, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LedgerTransaction, HouseholdLedger, Category } from "@/lib/types";
@@ -126,6 +126,68 @@ export function useLedger() {
     });
   };
 
+  // 트랜잭션 수정
+  const updateTransaction = async (id: string, data: Omit<LedgerTransaction, "id" | "familyId" | "userId" | "createdAt">) => {
+    if (!familyId) return;
+
+    // 기존 트랜잭션 가져오기
+    const transactionRef = doc(db, "transactions", id);
+    const transactionSnap = await getDoc(transactionRef);
+
+    if (!transactionSnap.exists()) {
+      console.error("트랜잭션을 찾을 수 없습니다:", id);
+      return;
+    }
+
+    const oldTransaction = transactionSnap.data() as LedgerTransaction;
+
+    // 트랜잭션 업데이트
+    await updateDoc(transactionRef, data);
+
+    // 잔액 조정 (기존 트랜잭션의 영향을 제거하고 새 트랜잭션의 영향을 적용)
+    if (ledger) {
+      let balanceChange = 0;
+
+      // 기존 트랜잭션의 영향 제거
+      balanceChange += oldTransaction.type === "income" ? -oldTransaction.amount : oldTransaction.amount;
+
+      // 새 트랜잭션의 영향 적용
+      balanceChange += data.type === "income" ? data.amount : -data.amount;
+
+      await updateDoc(doc(db, "households", familyId), {
+        currentBalance: ledger.currentBalance + balanceChange,
+      });
+    }
+  };
+
+  // 트랜잭션 삭제
+  const deleteTransaction = async (id: string) => {
+    if (!familyId) return;
+
+    // 기존 트랜잭션 가져오기
+    const transactionRef = doc(db, "transactions", id);
+    const transactionSnap = await getDoc(transactionRef);
+
+    if (!transactionSnap.exists()) {
+      console.error("트랜잭션을 찾을 수 없습니다:", id);
+      return;
+    }
+
+    const oldTransaction = transactionSnap.data() as LedgerTransaction;
+
+    // 트랜잭션 삭제
+    await deleteDoc(transactionRef);
+
+    // 잔액 복구 (기존 트랜잭션의 영향을 제거)
+    if (ledger) {
+      const balanceChange = oldTransaction.type === "income" ? -oldTransaction.amount : oldTransaction.amount;
+
+      await updateDoc(doc(db, "households", familyId), {
+        currentBalance: ledger.currentBalance + balanceChange,
+      });
+    }
+  };
+
   // 이번 달 지출 계산
   const getMonthlyExpense = (): number => {
     const now = new Date();
@@ -187,6 +249,8 @@ export function useLedger() {
     ledger,
     loading,
     addTransaction,
+    updateTransaction,
+    deleteTransaction,
     updateBudget,
     getMonthlyExpense,
     getTodayExpense,
