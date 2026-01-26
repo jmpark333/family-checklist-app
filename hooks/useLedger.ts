@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LedgerTransaction, HouseholdLedger, Category } from "@/lib/types";
 
-const CATEGORIES = {
+export const CATEGORIES = {
   food: { label: "식비", emoji: "🍎", color: "bg-red-500" },
   cafe: { label: "카페", emoji: "☕", color: "bg-orange-500" },
   transport: { label: "교통", emoji: "🚌", color: "bg-blue-500" },
