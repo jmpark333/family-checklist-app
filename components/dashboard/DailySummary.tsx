@@ -47,6 +47,10 @@ export function DailySummary() {
             </div>
             <Progress value={progress} className="h-2" />
           </div>
+          {/* 안내 문구 */}
+          <p className="text-xs text-gray-400 text-center">
+            💡 누적 보상금을 클릭하면 내역을 볼 수 있습니다.
+          </p>
         </CardContent>
       </Card>
       <MonthlyRewardDialog open={showRewardDialog} onOpenChange={setShowRewardDialog} />
