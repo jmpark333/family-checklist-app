@@ -97,7 +97,11 @@ export const SCHEDULED_EVENTS: Event[] = [
 
 // 날짜에 해당하는 일정 가져오기
 export function getEventsForDate(date: Date): Event[] {
-  const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
+  // 로컬 시간대 기준으로 YYYY-MM-DD 형식 생성
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
   return SCHEDULED_EVENTS.filter((event) => {
     const eventDate = event.datetime.split("T")[0];
     return eventDate === dateStr;
