@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Category, LedgerTransaction } from "@/lib/types";
 import { CATEGORIES } from "@/hooks/useLedger";
+import { getTodayKey } from "@/lib/utils";
 
 interface TransactionDialogProps {
   open: boolean;
@@ -21,7 +22,7 @@ export function TransactionDialog({ open, onOpenChange, editingTransaction }: Tr
   const [category, setCategory] = useState<Category>("food");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(getTodayKey());
 
   const isEditing = !!editingTransaction;
 
@@ -39,7 +40,7 @@ export function TransactionDialog({ open, onOpenChange, editingTransaction }: Tr
       setCategory("food");
       setAmount("");
       setMemo("");
-      setDate(new Date().toISOString().split("T")[0]);
+      setDate(getTodayKey());
     }
   }, [editingTransaction, open]);
 
@@ -70,7 +71,7 @@ export function TransactionDialog({ open, onOpenChange, editingTransaction }: Tr
     // 초기화
     setAmount("");
     setMemo("");
-    setDate(new Date().toISOString().split("T")[0]);
+    setDate(getTodayKey());
     onOpenChange(false);
   };
 

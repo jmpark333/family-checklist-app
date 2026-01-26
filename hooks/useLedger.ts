@@ -5,6 +5,7 @@ import { collection, addDoc, updateDoc, doc, onSnapshot, query, where, orderBy, 
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LedgerTransaction, HouseholdLedger, Category } from "@/lib/types";
+import { getTodayKey } from "@/lib/utils";
 
 export const CATEGORIES = {
   food: { label: "식비", emoji: "🍎", color: "bg-red-500" },
@@ -200,7 +201,7 @@ export function useLedger() {
 
   // 오늘 지출 계산
   const getTodayExpense = (): number => {
-    const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = getTodayKey();
 
     return transactions
       .filter((t) => t.type === "expense" && t.date === todayKey)

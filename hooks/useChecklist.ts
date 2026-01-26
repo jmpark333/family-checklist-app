@@ -78,7 +78,7 @@ export function useChecklist() {
   useEffect(() => {
     if (!familyId) return;
 
-    const todayKey = new Date().toISOString().split("T")[0];
+    const todayKey = getTodayKey();
 
     const q = query(
       collection(db, "transactions"),
