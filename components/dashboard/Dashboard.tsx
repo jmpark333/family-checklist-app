@@ -66,15 +66,15 @@ export function Dashboard() {
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               {/* 잔고 정보 - 한줄 표시 */}
-              <div className="text-sm flex items-center flex-wrap gap-1 sm:gap-2">
+              <div className="text-base sm:text-lg flex items-center flex-wrap gap-1 sm:gap-2">
                 <span className="text-gray-500">잔고:</span>
-                <span className="font-bold text-green-600">
+                <span className="font-bold text-green-600 text-xl sm:text-2xl">
                   {balanceLoading ? "로딩 중..." : `₩${currentBalance.toLocaleString()}`}
                 </span>
                 {pendingReward > 0 && (
                   <>
                     <span className="text-gray-500">내일:</span>
-                    <span className="font-bold text-blue-600">+₩{pendingReward.toLocaleString()}</span>
+                    <span className="font-bold text-blue-600 text-lg sm:text-xl">+₩{pendingReward.toLocaleString()}</span>
                   </>
                 )}
               </div>
