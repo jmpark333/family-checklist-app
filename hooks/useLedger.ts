@@ -5,7 +5,7 @@ import { collection, addDoc, updateDoc, doc, onSnapshot, query, where, orderBy, 
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { LedgerTransaction, HouseholdLedger, Category } from "@/lib/types";
-import { getTodayKey } from "@/lib/utils";
+import { getTodayKey, getDateKey } from "@/lib/utils";
 
 export const CATEGORIES = {
   food: { label: "식비", emoji: "🍎", color: "bg-red-500" },
@@ -245,6 +245,47 @@ export function useLedger() {
       .slice(0, 5);
   };
 
+  // 어제의 체크리스트 보상금을 잔고에 동기화
+  const syncYesterdayReward = async () => {
+    if (!familyId || !ledger) return;
+
+    // 어제 날짜 계산 (Local timezone)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayKey = getDateKey(yesterday);
+
+    // 이미 지급되었는지 확인
+    if (ledger.paidRewards?.[yesterdayKey]) {
+      console.log("[보상 동기화] 어제 보상 이미 지급됨:", yesterdayKey);
+      return;
+    }
+
+    // 어제의 체크리스트에서 보상금 읽기
+    const checklistRef = doc(db, "checklists", yesterdayKey);
+    const checklistSnap = await getDoc(checklistRef);
+
+    if (!checklistSnap.exists()) {
+      console.log("[보상 동기화] 어제 체크리스트 없음:", yesterdayKey);
+      return;
+    }
+
+    const yesterdayData = checklistSnap.data();
+    const yesterdayReward = yesterdayData[familyId]?.totalReward || 0;
+
+    if (yesterdayReward === 0) {
+      console.log("[보상 동기화] 어제 보상금 0원:", yesterdayKey);
+      return;
+    }
+
+    // 잔고에 보상금 추가 및 지급 기록
+    await updateDoc(doc(db, "households", familyId), {
+      currentBalance: ledger.currentBalance + yesterdayReward,
+      [`paidRewards.${yesterdayKey}`]: yesterdayReward,
+    });
+
+    console.log("[보상 동기화] 어제 보상금 지급 완료:", yesterdayKey, yesterdayReward);
+  };
+
   return {
     transactions,
     ledger,
@@ -259,5 +300,6 @@ export function useLedger() {
     getCategoryStats,
     getRecentExpenses,
     CATEGORIES,
+    syncYesterdayReward,
   };
 }

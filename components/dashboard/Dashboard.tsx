@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCurrentBalance } from "@/hooks/useCurrentBalance";
+import { useLedger } from "@/hooks/useLedger";
 import { Button } from "@/components/ui/button";
 import { TodayChecklist } from "./TodayChecklist";
 import { MiniCalendar } from "./MiniCalendar";
@@ -23,7 +24,13 @@ if (process.env.NODE_ENV === "development") {
 export function Dashboard() {
   const { userData, logout } = useAuth();
   const { currentBalance, pendingReward, loading: balanceLoading } = useCurrentBalance();
+  const { syncYesterdayReward } = useLedger();
   const [showSettings, setShowSettings] = useState(false);
+
+  // 앱 로드 시 어제의 보상금을 잔고에 동기화
+  useEffect(() => {
+    syncYesterdayReward();
+  }, []);
 
   const handleLogout = async () => {
     try {
