@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChecklist } from "@/hooks/useChecklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Plus, Wallet } from "lucide-react";
 
 export function DailyExpense() {
+  const router = useRouter();
   const { userData } = useAuth();
   const { dailyExpense, updateExpense } = useChecklist();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,14 +34,23 @@ export function DailyExpense() {
             <Wallet className="w-5 h-5" />
             오늘의 소비금액
           </span>
-          {isChild && (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-2">
-                  <Plus className="w-4 h-4" />
-                  추가
-                </Button>
-              </DialogTrigger>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-2"
+              onClick={() => router.push("/ledger")}
+            >
+              가계부
+            </Button>
+            {isChild && (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-2">
+                    <Plus className="w-4 h-4" />
+                    추가
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>소비금액 입력</DialogTitle>
@@ -68,7 +79,8 @@ export function DailyExpense() {
                 </div>
               </DialogContent>
             </Dialog>
-          )}
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent>
