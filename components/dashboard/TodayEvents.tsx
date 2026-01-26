@@ -127,7 +127,14 @@ export function TodayEvents() {
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>📅 오늘의 일정</span>
-          <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+          <Dialog open={isDialogOpen} onOpenChange={(open) => {
+            if (open) {
+              setEditingEvent(null);
+              setIsDialogOpen(true);
+            } else {
+              handleClose();
+            }
+          }}>
             <DialogTrigger asChild>
               <Button size="sm" variant="outline" className="gap-2" onClick={() => setEditingEvent(null)}>
                 <Plus className="w-4 h-4" />
