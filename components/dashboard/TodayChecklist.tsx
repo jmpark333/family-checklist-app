@@ -1,16 +1,45 @@
 "use client";
 
+import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChecklist } from "@/hooks/useChecklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Circle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { CheckCircle2, Circle, Pencil } from "lucide-react";
 
 export function TodayChecklist() {
   const { userData } = useAuth();
-  const { checklist, todayReward, loading, toggleItem } = useChecklist();
+  const { checklist, todayReward, loading, toggleItem, updateReward } = useChecklist();
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
 
   const isParent = userData?.role === "parent";
+
+  const handleStartEdit = (itemId: string, currentReward: number) => {
+    setEditingItemId(itemId);
+    setEditValue(currentReward.toString());
+  };
+
+  const handleSaveEdit = async () => {
+    if (editingItemId && editValue) {
+      const newReward = parseInt(editValue, 10);
+      if (!isNaN(newReward) && newReward >= 0) {
+        await updateReward(editingItemId, newReward);
+      }
+    }
+    setEditingItemId(null);
+    setEditValue("");
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      setEditingItemId(null);
+      setEditValue("");
+    }
+  };
 
   return (
     <Card>
@@ -28,35 +57,61 @@ export function TodayChecklist() {
         ) : (
           <div className="space-y-3">
             {checklist.map((item) => (
-              <button
+              <div
                 key={item.id}
-                onClick={() => toggleItem(item.id)}
-                disabled={!isParent}
-                className={`w-full flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
+                className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all ${
                   item.completed
                     ? "bg-green-50 border-green-500 dark:bg-green-900/20"
-                    : isParent
-                    ? "bg-white border-gray-200 hover:border-blue-300 dark:bg-gray-800 dark:border-gray-700"
-                    : "bg-gray-50 border-gray-200 cursor-not-allowed dark:bg-gray-800/50"
+                    : "bg-white border-gray-200 dark:bg-gray-800 dark:border-gray-700"
                 }`}
               >
-                <div className="flex-shrink-0">
-                  {item.completed ? (
-                    <CheckCircle2 className="w-6 h-6 text-green-500" />
-                  ) : (
-                    <Circle className="w-6 h-6 text-gray-400" />
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <div className="font-medium">{item.title}</div>
-                </div>
-                <Badge
-                  variant={item.completed ? "default" : "secondary"}
-                  className={item.completed ? "bg-green-500" : ""}
+                {/* 체크리스트 항목 버튼 */}
+                <button
+                  onClick={() => toggleItem(item.id)}
+                  disabled={!isParent}
+                  className="flex-1 flex items-center gap-4 text-left"
                 >
-                  +₩{item.reward.toLocaleString()}
-                </Badge>
-              </button>
+                  <div className="flex-shrink-0">
+                    {item.completed ? (
+                      <CheckCircle2 className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <Circle className={`w-6 h-6 ${isParent ? "text-gray-400" : "text-gray-300"}`} />
+                    )}
+                  </div>
+                  <div className="font-medium">{item.title}</div>
+                </button>
+
+                {/* 보상금 표시/편집 */}
+                {isParent && editingItemId === item.id ? (
+                  <div className="flex items-center gap-1">
+                    <Input
+                      type="number"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={handleSaveEdit}
+                      onKeyDown={handleKeyDown}
+                      className="w-24 h-8 text-sm"
+                      autoFocus
+                      min="0"
+                    />
+                    <span className="text-sm text-gray-500">원</span>
+                  </div>
+                ) : (
+                  <div
+                    className={`flex items-center gap-2 ${isParent ? "cursor-pointer hover:opacity-80" : ""}`}
+                    onClick={() => isParent && handleStartEdit(item.id, item.reward)}
+                    title={isParent ? "클릭하여 보상금 수정" : ""}
+                  >
+                    <Badge
+                      variant={item.completed ? "default" : "secondary"}
+                      className={item.completed ? "bg-green-500" : ""}
+                    >
+                      +₩{item.reward.toLocaleString()}
+                    </Badge>
+                    {isParent && <Pencil className="w-3 h-3 text-gray-400" />}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         )}

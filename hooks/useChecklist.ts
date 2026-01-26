@@ -183,6 +183,29 @@ export function useChecklist() {
     });
   };
 
+  // 체크리스트 항목 보상금 수정
+  const updateReward = async (itemId: string, newReward: number) => {
+    if (!familyId) return;
+
+    const updatedItems = checklist.map((item) =>
+      item.id === itemId ? { ...item, reward: newReward } : item
+    );
+
+    // 로컬 상태 업데이트
+    setChecklist(updatedItems);
+
+    // Firestore 업데이트
+    const todayKey = getTodayKey();
+    const totalReward = updatedItems
+      .filter((item) => item.completed)
+      .reduce((sum, item) => sum + item.reward, 0);
+
+    await updateDoc(doc(db, "checklists", todayKey), {
+      [`${familyId}.items`]: updatedItems,
+      [`${familyId}.totalReward`]: totalReward,
+    });
+  };
+
   // 이벤트 추가
   const addEvent = async (event: Omit<Event, "id">) => {
     if (!familyId) return;
@@ -254,6 +277,7 @@ export function useChecklist() {
     todayReward,
     loading,
     toggleItem,
+    updateReward,
     addEvent,
     updateEvent,
     deleteEvent,
