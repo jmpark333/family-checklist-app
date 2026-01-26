@@ -1,16 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateDetailDialog } from "@/components/calendar/DateDetailDialog";
 
+// 고정 일정 데이터 (2025년)
+const SCHEDULED_EVENTS = [
+  { month: 0, day: 30, title: "SMART 영어 집중과정 1차 강의 마감" }, // 1월 30일
+  { month: 1, day: 3, title: "본등록금 고지서 출력 시작" },
+  { month: 1, day: 3, title: "장학금 증명 서류 제출 마감" },
+  { month: 1, day: 3, title: "본등록금 납부 시작" },
+  { month: 1, day: 5, title: "본등록금 납부 마감" },
+  { month: 1, day: 5, title: "1차 수강신청 시작" },
+  { month: 1, day: 9, title: "1차 수강신청 마감" },
+  { month: 1, day: 12, title: "1차 수강신청 확정 결과 조회" },
+  { month: 1, day: 23, title: "입학식 및 신입생 환영회" },
+  { month: 1, day: 24, title: "신체검사 시작" },
+  { month: 1, day: 25, title: "신입생 오리엔테이션 시작" },
+  { month: 2, day: 3, title: "개강일" },
+  { month: 2, day: 31, title: "영어 교양필수 이수면제 신청 마감" },
+];
+
 export function MiniCalendar() {
   const [date, setDate] = useState<Date>(new Date());
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // 현재 월의 일정이 있는 날짜들을 계산
+  const eventDays = useMemo(() => {
+    const days = new Set<number>();
+    SCHEDULED_EVENTS.forEach((event) => {
+      if (event.month === currentMonth.getMonth()) {
+        days.add(event.day);
+      }
+    });
+    return days;
+  }, [currentMonth]);
 
   // 월 이동
   const navigateMonth = (direction: "prev" | "next") => {
@@ -37,8 +65,8 @@ export function MiniCalendar() {
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1 flex-1">
+          <CardTitle>
+            <div className="flex items-center justify-center gap-1 mb-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -46,7 +74,7 @@ export function MiniCalendar() {
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
-              <span className="text-sm sm:text-base font-medium">
+              <span className="text-sm sm:text-base font-medium min-w-[120px] text-center">
                 {currentMonth.getFullYear()}년 {monthNames[currentMonth.getMonth()]}
               </span>
               <Button
@@ -57,18 +85,20 @@ export function MiniCalendar() {
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                const now = new Date();
-                setDate(now);
-                setCurrentMonth(now);
-              }}
-              className="text-xs px-2"
-            >
-              오늘
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const now = new Date();
+                  setDate(now);
+                  setCurrentMonth(now);
+                }}
+                className="text-xs px-3"
+              >
+                오늘
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -78,6 +108,9 @@ export function MiniCalendar() {
             selected={date}
             onSelect={handleSelectDate}
             className="rounded-md border w-full"
+            modifiers={{
+              hasEvent: (date) => eventDays.has(date.getDate()),
+            }}
             classNames={{
                 months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 w-full",
                 month: "space-y-4 w-full",
@@ -102,9 +135,22 @@ export function MiniCalendar() {
                   "aria-selected:bg-accent aria-selected:text-accent-foreground",
                 day_hidden: "invisible",
               }}
+            components={{
+              Day: ({ day, ...props }) => {
+                const hasEvent = eventDays.has(day.date.getDate());
+                return (
+                  <div className="relative flex items-center justify-center h-7 w-[30px] sm:h-9 sm:w-9">
+                    <div {...props} />
+                    {hasEvent && (
+                      <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+                    )}
+                  </div>
+                );
+              },
+            }}
             />
-          <p className="text-xs text-gray-500 mt-3 text-center hidden sm:block">
-            날짜를 클릭하면 상세 내용을 볼 수 있습니다
+          <p className="text-xs text-gray-500 mt-3 text-center">
+            📅 날짜를 클릭하면 상세 내용을 볼 수 있습니다
           </p>
         </CardContent>
       </Card>
