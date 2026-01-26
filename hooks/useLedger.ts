@@ -17,7 +17,7 @@ export const CATEGORIES = {
 } as const;
 
 export function useLedger() {
-  const { userData } = useAuth();
+  const { userData, currentUser } = useAuth();
   const [transactions, setTransactions] = useState<LedgerTransaction[]>([]);
   const [ledger, setLedger] = useState<HouseholdLedger | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,11 +90,11 @@ export function useLedger() {
 
   // 트랜잭션 추가
   const addTransaction = async (data: Omit<LedgerTransaction, "id" | "familyId" | "userId" | "createdAt">) => {
-    if (!familyId || !userData) return;
+    if (!familyId || !currentUser) return;
 
     const newTransaction: Omit<LedgerTransaction, "id"> = {
       familyId,
-      userId: userData.uid,
+      userId: currentUser.uid,
       createdAt: new Date().toISOString(),
       ...data,
     };
