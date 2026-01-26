@@ -5,13 +5,14 @@ import { doc, getDoc, setDoc, updateDoc, onSnapshot, query, where, orderBy, coll
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTodayKey } from "@/lib/utils";
-import { ChecklistItem, DailyChecklist, Event, LedgerTransaction } from "@/lib/types";
+import { ChecklistItem, DailyChecklist, Event, LedgerTransaction, HouseholdLedger } from "@/lib/types";
 
 export function useChecklist() {
   const { currentUser, userData } = useAuth();
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [dailyExpense, setDailyExpense] = useState(0);
+  const [currentBalance, setCurrentBalance] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const familyId = userData?.familyId;
@@ -80,6 +81,28 @@ export function useChecklist() {
     }, (error) => {
       console.error("트랜잭션 로드 오류:", error);
     });
+
+    return () => unsubscribe();
+  }, [familyId]);
+
+  // 가계부 현재 잔액 로드
+  useEffect(() => {
+    if (!familyId) return;
+
+    const ledgerRef = doc(db, "households", familyId);
+
+    const unsubscribe = onSnapshot(
+      ledgerRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const ledger = docSnap.data() as HouseholdLedger;
+          setCurrentBalance(ledger.currentBalance ?? 0);
+        }
+      },
+      (error) => {
+        console.error("가계부 잔액 로드 오류:", error);
+      }
+    );
 
     return () => unsubscribe();
   }, [familyId]);
@@ -194,6 +217,7 @@ export function useChecklist() {
     checklist,
     events,
     dailyExpense,
+    currentBalance,
     todayReward,
     loading,
     toggleItem,

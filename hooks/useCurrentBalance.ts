@@ -1,39 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChecklist } from "./useChecklist";
+import { HouseholdLedger } from "@/lib/types";
 
 export function useCurrentBalance() {
-  const { currentUser } = useAuth();
+  const { userData } = useAuth();
   const { todayReward } = useChecklist();
   const [currentBalance, setCurrentBalance] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const familyId = userData?.familyId;
+
   useEffect(() => {
-    if (!currentUser) return;
+    if (!familyId) {
+      setLoading(false);
+      return;
+    }
 
-    const fetchBalance = async () => {
-      setLoading(true);
-      try {
-        const userRef = doc(db, "users", currentUser.uid);
-        const userSnap = await getDoc(userRef);
+    const ledgerRef = doc(db, "households", familyId);
 
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          setCurrentBalance(data.currentBalance || 0);
+    const unsubscribe = onSnapshot(
+      ledgerRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          const ledger = docSnap.data() as HouseholdLedger;
+          setCurrentBalance(ledger.currentBalance ?? 0);
         }
-      } catch (error) {
+        setLoading(false);
+      },
+      (error) => {
         console.error("잔고 로드 오류:", error);
-      } finally {
         setLoading(false);
       }
-    };
+    );
 
-    fetchBalance();
-  }, [currentUser]);
+    return () => unsubscribe();
+  }, [familyId]);
 
   return {
     currentBalance,
