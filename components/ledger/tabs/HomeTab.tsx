@@ -36,7 +36,7 @@ export function HomeTab() {
             현재 잔액
           </p>
           <p className="text-3xl font-bold text-center mt-2">
-            ₩{ledger?.currentBalance.toLocaleString() ?? 0}
+            ₩{(ledger?.currentBalance ?? 0).toLocaleString()}
           </p>
         </CardContent>
       </Card>

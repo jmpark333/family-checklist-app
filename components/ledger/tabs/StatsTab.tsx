@@ -29,8 +29,7 @@ export function StatsTab() {
           <div className="text-center mb-4">
             <p className="text-4xl font-bold">{budgetPercentage}%</p>
             <p className="text-sm text-gray-500 mt-1">
-              ₩{monthlyExpense.toLocaleString()} / ₩
-              {ledger?.monthlyBudget.toLocaleString()}
+              ₩{monthlyExpense.toLocaleString()} / ₩{(ledger?.monthlyBudget ?? 0).toLocaleString()}
             </p>
           </div>
           <Progress

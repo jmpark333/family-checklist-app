@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import { useLedger } from "@/hooks/useLedger";
 import { HomeTab } from "./tabs/HomeTab";
 import { HistoryTab } from "./tabs/HistoryTab";
@@ -12,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 type TabType = "home" | "history" | "stats";
 
 export function LedgerPage() {
+  const router = useRouter();
   const { userData } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
@@ -37,7 +40,15 @@ export function LedgerPage() {
       {/* 헤더 */}
       <div className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-md mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold">💰 가계부</h1>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => router.back()}
+              className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-xl font-bold">💰 가계부</h1>
+          </div>
           {isParent && (
             <button
               onClick={() => setIsBudgetDialogOpen(true)}
