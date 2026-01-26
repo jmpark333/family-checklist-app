@@ -116,7 +116,10 @@ export function MiniCalendar() {
               }}
             components={{
               Day: ({ day, ...props }) => {
-                const hasEvent = eventDays.has(day.date.getDate());
+                // 현재 월의 날짜인지 확인 (이전/다음 달의 날짜 제외)
+                const isCurrentMonth = day.date.getMonth() === currentMonth.getMonth() &&
+                                       day.date.getFullYear() === currentMonth.getFullYear();
+                const hasEvent = isCurrentMonth && eventDays.has(day.date.getDate());
                 return (
                   <div className="relative flex items-center justify-center h-7 w-[30px] sm:h-9 sm:w-9">
                     <div {...props} />
