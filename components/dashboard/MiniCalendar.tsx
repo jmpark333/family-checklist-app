@@ -6,23 +6,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateDetailDialog } from "@/components/calendar/DateDetailDialog";
-
-// 고정 일정 데이터 (2025년)
-const SCHEDULED_EVENTS = [
-  { month: 0, day: 30, title: "SMART 영어 집중과정 1차 강의 마감" }, // 1월 30일
-  { month: 1, day: 3, title: "본등록금 고지서 출력 시작" },
-  { month: 1, day: 3, title: "장학금 증명 서류 제출 마감" },
-  { month: 1, day: 3, title: "본등록금 납부 시작" },
-  { month: 1, day: 5, title: "본등록금 납부 마감" },
-  { month: 1, day: 5, title: "1차 수강신청 시작" },
-  { month: 1, day: 9, title: "1차 수강신청 마감" },
-  { month: 1, day: 12, title: "1차 수강신청 확정 결과 조회" },
-  { month: 1, day: 23, title: "입학식 및 신입생 환영회" },
-  { month: 1, day: 24, title: "신체검사 시작" },
-  { month: 1, day: 25, title: "신입생 오리엔테이션 시작" },
-  { month: 2, day: 3, title: "개강일" },
-  { month: 2, day: 31, title: "영어 교양필수 이수면제 신청 마감" },
-];
+import { getEventDaysForMonth } from "@/lib/scheduledEvents";
 
 export function MiniCalendar() {
   const [date, setDate] = useState<Date>(new Date());
@@ -31,13 +15,7 @@ export function MiniCalendar() {
 
   // 현재 월의 일정이 있는 날짜들을 계산
   const eventDays = useMemo(() => {
-    const days = new Set<number>();
-    SCHEDULED_EVENTS.forEach((event) => {
-      if (event.month === currentMonth.getMonth()) {
-        days.add(event.day);
-      }
-    });
-    return days;
+    return getEventDaysForMonth(currentMonth.getFullYear(), currentMonth.getMonth());
   }, [currentMonth]);
 
   // 월 이동
@@ -101,13 +79,14 @@ export function MiniCalendar() {
             </div>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0">
-          <Calendar
-            mode="single"
-            month={currentMonth}
-            selected={date}
-            onSelect={handleSelectDate}
-            className="rounded-md border w-full"
+        <CardContent className="px-2 sm:px-4 pt-0">
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              month={currentMonth}
+              selected={date}
+              onSelect={handleSelectDate}
+              className="rounded-md border"
             modifiers={{
               hasEvent: (date) => eventDays.has(date.getDate()),
             }}
@@ -149,6 +128,7 @@ export function MiniCalendar() {
               },
             }}
             />
+          </div>
           <p className="text-xs text-gray-500 mt-3 text-center">
             📅 날짜를 클릭하면 상세 내용을 볼 수 있습니다
           </p>

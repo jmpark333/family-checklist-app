@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getDateKey } from "@/lib/utils";
+import { getEventsForDate } from "@/lib/scheduledEvents";
 import {
   Dialog,
   DialogContent,
@@ -63,6 +64,27 @@ export function DateDetailDialog({ date, open, onOpenChange }: DateDetailDialogP
 
     fetchDateData();
   }, [date, currentUser, open]);
+
+  // 고정 일정 가져오기 (Firestore 데이터와 병합)
+  const allEvents = useMemo(() => {
+    const scheduledEvents = date ? getEventsForDate(date) : [];
+    // Firestore에서 가져온 events와 고정 일정을 병합 (중복 제거)
+    const eventMap = new Map<string, Event>();
+
+    // Firestore 이벤트 추가
+    events.forEach((event) => {
+      eventMap.set(event.id, event);
+    });
+
+    // 고정 일정 추가 (이미 존재하면 덮어쓰지 않음)
+    scheduledEvents.forEach((event) => {
+      if (!eventMap.has(event.id)) {
+        eventMap.set(event.id, event);
+      }
+    });
+
+    return Array.from(eventMap.values());
+  }, [date, events]);
 
   const totalReward = checklist
     .filter((item) => item.completed)
@@ -133,9 +155,9 @@ export function DateDetailDialog({ date, open, onOpenChange }: DateDetailDialogP
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {events.length > 0 ? (
+                {allEvents.length > 0 ? (
                   <div className="space-y-2">
-                    {events.map((event) => (
+                    {allEvents.map((event) => (
                       <div
                         key={event.id}
                         className="flex items-start gap-3 p-2 rounded border"
