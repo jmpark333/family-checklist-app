@@ -121,10 +121,9 @@ export function MiniCalendar() {
                                        day.date.getFullYear() === currentMonth.getFullYear();
                 const hasEvent = isCurrentMonth && eventDays.has(day.date.getDate());
 
-                // 날짜 클릭 핸들러 - 같은 날짜를 클릭해도 팝업이 열리도록
-                const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-                  props.onClick?.(e as any);
-                  // 이미 선택된 날짜를 클릭해도 팝업 열기
+                // 날짜 클릭 핸들러 - 직접 처리
+                const handleClick = () => {
+                  setDate(day.date);
                   setIsDialogOpen(true);
                 };
 
@@ -133,7 +132,7 @@ export function MiniCalendar() {
                     className="relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer"
                     onClick={handleClick}
                   >
-                    <div {...props} onClick={undefined as any} />
+                    <div {...props} />
                     {hasEvent && (
                       <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
                     )}
