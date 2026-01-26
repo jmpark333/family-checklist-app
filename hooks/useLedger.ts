@@ -122,6 +122,7 @@ export function useLedger() {
       monthlyBudget: budget.monthlyBudget,
       fixedExpense: budget.fixedExpense,
       initialBalance: budget.initialBalance,
+      currentBalance: budget.initialBalance, // 초기 잔액 설정 시 현재 잔액도 함께 업데이트
     });
   };
 
