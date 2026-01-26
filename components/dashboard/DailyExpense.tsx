@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChecklist } from "@/hooks/useChecklist";
+import { useLedger } from "@/hooks/useLedger";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,15 +15,28 @@ import { Plus, Wallet } from "lucide-react";
 export function DailyExpense() {
   const router = useRouter();
   const { userData } = useAuth();
-  const { dailyExpense, updateExpense } = useChecklist();
+  const { dailyExpense } = useChecklist();
+  const { addTransaction } = useLedger();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [inputExpense, setInputExpense] = useState(0);
+  const [inputMemo, setInputMemo] = useState("");
 
   const isChild = userData?.role === "child";
 
-  const handleSaveExpense = () => {
-    updateExpense(inputExpense);
+  const handleSaveExpense = async () => {
+    if (inputExpense <= 0) return;
+
+    // transactions 컬렉션에 직접 추가
+    await addTransaction({
+      date: new Date().toISOString().split("T")[0],
+      type: "expense",
+      category: "etc",
+      amount: inputExpense,
+      memo: inputMemo || "오늘의 소비",
+    });
+
     setInputExpense(0);
+    setInputMemo("");
     setIsDialogOpen(false);
   };
 
@@ -62,15 +76,17 @@ export function DailyExpense() {
                       id="expense-amount"
                       type="number"
                       placeholder="0"
-                      value={inputExpense}
+                      value={inputExpense || ""}
                       onChange={(e) => setInputExpense(Number(e.target.value))}
                     />
                   </div>
                   <div>
-                    <Label htmlFor="expense-description">내용</Label>
+                    <Label htmlFor="expense-memo">내용</Label>
                     <Input
-                      id="expense-description"
+                      id="expense-memo"
                       placeholder="무엇을 샀나요?"
+                      value={inputMemo}
+                      onChange={(e) => setInputMemo(e.target.value)}
                     />
                   </div>
                   <Button className="w-full" onClick={handleSaveExpense}>

@@ -12,6 +12,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [isSignup, setIsSignup] = useState(false);
   const [role, setRole] = useState<"parent" | "child">("parent");
+  const [parentEmail, setParentEmail] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -24,7 +25,13 @@ export function LoginForm() {
 
     try {
       if (isSignup) {
-        await signup(email, password, role);
+        // 자녀 회원가입 시 부모 이메일 필수 확인
+        if (role === "child" && !parentEmail) {
+          setError("자녀 가입 시 부모 이메일이 필요합니다.");
+          setLoading(false);
+          return;
+        }
+        await signup(email, password, role, parentEmail);
       } else {
         await login(email, password);
       }
@@ -88,7 +95,10 @@ export function LoginForm() {
                     type="button"
                     variant={role === "parent" ? "default" : "outline"}
                     className="flex-1"
-                    onClick={() => setRole("parent")}
+                    onClick={() => {
+                      setRole("parent");
+                      setParentEmail(""); // 역할 변경 시 부모 이메일 초기화
+                    }}
                     disabled={loading}
                   >
                     👨‍👩‍👧 부모
@@ -103,6 +113,24 @@ export function LoginForm() {
                     👦 자녀
                   </Button>
                 </div>
+              </div>
+            )}
+
+            {isSignup && role === "child" && (
+              <div className="space-y-2">
+                <Label htmlFor="parentEmail">부모 이메일</Label>
+                <Input
+                  id="parentEmail"
+                  type="email"
+                  placeholder="부모님 이메일을 입력하세요"
+                  value={parentEmail}
+                  onChange={(e) => setParentEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">
+                  부모님의 이메일을 입력하면 가족 계정에 연결됩니다
+                </p>
               </div>
             )}
 

@@ -17,9 +17,9 @@ export function useChecklist() {
 
   const familyId = userData?.familyId;
 
-  // 체크리스트 데이터 로드
+  // 체크리스트 데이터 로드 - familyId 기반으로 변경
   useEffect(() => {
-    if (!currentUser) return;
+    if (!familyId) return;
 
     const todayKey = getTodayKey();
     const checklistRef = doc(db, "checklists", todayKey);
@@ -29,10 +29,10 @@ export function useChecklist() {
       (docSnap) => {
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const userChecklist = data[currentUser.uid] as DailyChecklist;
-          if (userChecklist) {
-            setChecklist(userChecklist.items || []);
-            setEvents(userChecklist.events || []);
+          const familyChecklist = data[familyId] as DailyChecklist;
+          if (familyChecklist) {
+            setChecklist(familyChecklist.items || []);
+            setEvents(familyChecklist.events || []);
             // dailyExpense는 이제 ledger 트랜잭션에서 계산하므로 여기서는 사용하지 않음
           } else {
             // 초기 데이터 생성
@@ -51,7 +51,7 @@ export function useChecklist() {
     );
 
     return () => unsubscribe();
-  }, [currentUser]);
+  }, [familyId]);
 
   // 가계부 트랜잭션에서 오늘의 지출 계산
   useEffect(() => {
@@ -107,8 +107,10 @@ export function useChecklist() {
     return () => unsubscribe();
   }, [familyId]);
 
-  // 기본 데이터 초기화
+  // 기본 데이터 초기화 - familyId 기반으로 변경
   const initializeDefaultData = async () => {
+    if (!familyId) return;
+
     const defaultItems: ChecklistItem[] = [
       { id: "1", title: "7시 전 기상", reward: 5000, completed: false },
       { id: "2", title: "8시 전 나가기", reward: 5000, completed: false },
@@ -122,8 +124,8 @@ export function useChecklist() {
     await setDoc(
       checklistRef,
       {
-        [currentUser!.uid]: {
-          userId: currentUser!.uid,
+        [familyId]: {
+          familyId,
           date: todayKey,
           items: defaultItems,
           events: [],
@@ -139,6 +141,8 @@ export function useChecklist() {
 
   // 체크리스트 항목 토글
   const toggleItem = async (itemId: string) => {
+    if (!familyId) return;
+
     const updatedItems = checklist.map((item) =>
       item.id === itemId ? { ...item, completed: !item.completed } : item
     );
@@ -153,13 +157,15 @@ export function useChecklist() {
       .reduce((sum, item) => sum + item.reward, 0);
 
     await updateDoc(doc(db, "checklists", todayKey), {
-      [`${currentUser!.uid}.items`]: updatedItems,
-      [`${currentUser!.uid}.totalReward`]: totalReward,
+      [`${familyId}.items`]: updatedItems,
+      [`${familyId}.totalReward`]: totalReward,
     });
   };
 
   // 이벤트 추가
   const addEvent = async (event: Omit<Event, "id">) => {
+    if (!familyId) return;
+
     const newEvent: Event = {
       ...event,
       id: Date.now().toString(),
@@ -170,12 +176,14 @@ export function useChecklist() {
 
     const todayKey = getTodayKey();
     await updateDoc(doc(db, "checklists", todayKey), {
-      [`${currentUser!.uid}.events`]: updatedEvents,
+      [`${familyId}.events`]: updatedEvents,
     });
   };
 
   // 이벤트 수정
   const updateEvent = async (eventId: string, updatedData: Omit<Event, "id">) => {
+    if (!familyId) return;
+
     const updatedEvents = events.map((event) =>
       event.id === eventId ? { ...event, ...updatedData } : event
     );
@@ -183,28 +191,32 @@ export function useChecklist() {
 
     const todayKey = getTodayKey();
     await updateDoc(doc(db, "checklists", todayKey), {
-      [`${currentUser!.uid}.events`]: updatedEvents,
+      [`${familyId}.events`]: updatedEvents,
     });
   };
 
   // 이벤트 삭제
   const deleteEvent = async (eventId: string) => {
+    if (!familyId) return;
+
     const updatedEvents = events.filter((event) => event.id !== eventId);
     setEvents(updatedEvents);
 
     const todayKey = getTodayKey();
     await updateDoc(doc(db, "checklists", todayKey), {
-      [`${currentUser!.uid}.events`]: updatedEvents,
+      [`${familyId}.events`]: updatedEvents,
     });
   };
 
-  // 소비금액 업데이트
+  // 소비금액 업데이트 (더 이상 사용하지 않음, transactions 사용)
   const updateExpense = async (amount: number) => {
+    if (!familyId) return;
+
     setDailyExpense(amount);
 
     const todayKey = getTodayKey();
     await updateDoc(doc(db, "checklists", todayKey), {
-      [`${currentUser!.uid}.dailyExpense`]: amount,
+      [`${familyId}.dailyExpense`]: amount,
     });
   };
 

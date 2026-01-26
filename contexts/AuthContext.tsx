@@ -8,7 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, getDocs, collection, query, where } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { UserData, UserRole } from "@/lib/types";
 
@@ -16,7 +16,7 @@ interface AuthContextType {
   currentUser: User | null;
   userData: UserData | null;
   loading: boolean;
-  signup: (email: string, password: string, role: UserRole) => Promise<void>;
+  signup: (email: string, password: string, role: UserRole, parentEmail?: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -29,11 +29,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   // 회원가입
-  async function signup(email: string, password: string, role: UserRole) {
+  async function signup(email: string, password: string, role: UserRole, parentEmail?: string) {
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
-    // familyId 생성 (이메일 도메인 기반 또는 UID 기반)
-    const familyId = role === "parent" ? user.uid : `family-${user.uid.slice(0, 8)}`;
+    let familyId: string;
+
+    if (role === "parent") {
+      // 부모: 새 familyId 생성 (자신의 uid 사용)
+      familyId = user.uid;
+    } else {
+      // 자녀: 부모 이메일로 familyId 찾기
+      if (!parentEmail) {
+        throw new Error("자녀 회원가입 시 부모 이메일이 필요합니다");
+      }
+
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", parentEmail), where("role", "==", "parent"));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        throw new Error("부모 계정을 찾을 수 없습니다. 부모 이메일을 확인해주세요");
+      }
+
+      const parentDoc = querySnapshot.docs[0];
+      const parentData = parentDoc.data();
+      familyId = parentData.familyId;
+    }
 
     const newUserData: UserData = {
       email,
