@@ -21,9 +21,9 @@ export function BudgetSettingsDialog({ open, onOpenChange }: BudgetSettingsDialo
   // 다이얼로그 열릴 때 현재 값 로드
   useEffect(() => {
     if (open && ledger) {
-      setMonthlyBudget(ledger.monthlyBudget.toString());
-      setFixedExpense(ledger.fixedExpense.toString());
-      setInitialBalance(ledger.initialBalance.toString());
+      setMonthlyBudget((ledger.monthlyBudget ?? 0).toString());
+      setFixedExpense((ledger.fixedExpense ?? 0).toString());
+      setInitialBalance((ledger.initialBalance ?? 0).toString());
     }
   }, [open, ledger]);
 
@@ -38,6 +38,11 @@ export function BudgetSettingsDialog({ open, onOpenChange }: BudgetSettingsDialo
 
     onOpenChange(false);
   };
+
+  // 다이얼로그가 열려있지만 ledger가 아직 로드되지 않은 경우
+  if (open && !ledger) {
+    return null;
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
