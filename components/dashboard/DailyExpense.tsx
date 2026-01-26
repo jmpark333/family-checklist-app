@@ -77,6 +77,9 @@ export function DailyExpense() {
             ₩{dailyExpense.toLocaleString()}
           </div>
           <p className="text-sm text-gray-500 mt-1">오늘 사용한 금액</p>
+          <p className="text-xs text-gray-400 mt-2">
+            오늘의 소비금액은 자녀가 입력합니다.
+          </p>
         </div>
       </CardContent>
     </Card>

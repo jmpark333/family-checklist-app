@@ -97,7 +97,7 @@ export function MiniCalendar() {
                 caption_label: "text-sm font-medium hidden",
                 nav: "space-x-1 flex items-center hidden",
                 table: "w-full border-collapse space-y-1 mx-auto",
-                head_row: "flex w-full justify-center gap-0.5 sm:gap-1",
+                head_row: "flex w-full justify-center gap-0.5 sm:gap-1 bg-gray-100 dark:bg-gray-800 rounded-t-md",
                 head_cell:
                   "text-muted-foreground rounded-md w-8 sm:w-10 flex-1 font-normal text-[0.7rem] sm:text-[0.8rem] text-center",
                 row: "flex w-full mt-2 justify-center gap-0.5 sm:gap-1",
@@ -114,6 +114,13 @@ export function MiniCalendar() {
                   "aria-selected:bg-accent aria-selected:text-accent-foreground",
                 day_hidden: "invisible",
               }}
+            formatters={{
+              formatWeekdayName: (date) => {
+                const weekday = date.getDay();
+                const weekdayLabels = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+                return weekdayLabels[weekday];
+              },
+            }}
             components={{
               Day: ({ day, ...props }) => {
                 // 현재 월의 날짜인지 확인 (이전/다음 달의 날짜 제외)

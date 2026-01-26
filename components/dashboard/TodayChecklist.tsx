@@ -16,7 +16,7 @@ export function TodayChecklist() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          <span>📋 오늘의 체크리스트</span>
+          <span>📋 <span className="hidden sm:inline">오늘의 체크리스트</span><span className="sm:hidden">Checklist</span></span>
           <Badge variant="secondary" className="text-lg">
             +₩{todayReward.toLocaleString()}
           </Badge>
@@ -63,6 +63,11 @@ export function TodayChecklist() {
         {!isParent && (
           <p className="text-sm text-gray-500 mt-4 text-center">
             체크리스트는 부모님이 확인해주세요
+          </p>
+        )}
+        {isParent && (
+          <p className="text-xs text-gray-400 mt-2 text-center">
+            체크리스트는 부모님이 입력합니다.
           </p>
         )}
       </CardContent>
