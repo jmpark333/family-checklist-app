@@ -5,7 +5,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useChecklist } from "./useChecklist";
-import { getTodayKey } from "@/lib/utils";
+import { getTodayKey, getDateKey } from "@/lib/utils";
 
 export function useMonthlyReward() {
   const { userData } = useAuth();
@@ -22,27 +22,40 @@ export function useMonthlyReward() {
     const fetchMonthlyData = async () => {
       setLoading(true);
 
-      // 오늘 날짜 키
-      const todayKey = getTodayKey();
-
       try {
-        // 오늘의 체크리스트 문서 가져오기
-        const checklistRef = doc(db, "checklists", todayKey);
-        const docSnap = await getDoc(checklistRef);
+        // 오늘 날짜
+        const today = new Date();
+        const todayKey = getTodayKey();
 
-        let monthlySum = 0;
+        // 이번 달 1일부터 오늘까지의 날짜 배열 생성
+        const year = today.getFullYear();
+        const month = today.getMonth(); // 0-indexed (0 = 1월)
+        const dayOfMonth = today.getDate();
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          const familyData = data[familyId];
-          if (familyData && familyData.totalReward) {
-            monthlySum = familyData.totalReward;
-          }
+        const dateKeys: string[] = [];
+        for (let day = 1; day <= dayOfMonth; day++) {
+          const date = new Date(year, month, day);
+          dateKeys.push(getDateKey(date));
         }
 
-        // TODO: 전월 데이터 합산 (현재는 오늘만)
+        // 각 날짜의 체크리스트를 병렬로 조회하여 보상금 합산
+        const promises = dateKeys.map(async (dateKey) => {
+          const checklistRef = doc(db, "checklists", dateKey);
+          const docSnap = await getDoc(checklistRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            const familyData = data[familyId];
+            return familyData?.totalReward || 0;
+          }
+          return 0;
+        });
+
+        const rewards = await Promise.all(promises);
+        const monthlySum = rewards.reduce((sum, reward) => sum + reward, 0);
+
         setMonthlyReward(monthlySum);
-        setTotalBalance(monthlySum); // 임시로 오늘 합계와 동일
+        setTotalBalance(monthlySum);
       } catch (error) {
         console.error("월간 보상금 로드 오류:", error);
       } finally {

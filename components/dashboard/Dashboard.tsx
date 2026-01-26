@@ -24,13 +24,18 @@ if (process.env.NODE_ENV === "development") {
 export function Dashboard() {
   const { userData, logout } = useAuth();
   const { currentBalance, pendingReward, loading: balanceLoading } = useCurrentBalance();
-  const { syncYesterdayReward } = useLedger();
+  const { syncYesterdayReward, ledger: householdLedger, loading: ledgerLoading } = useLedger();
   const [showSettings, setShowSettings] = useState(false);
+  const [synced, setSynced] = useState(false);
 
   // 앱 로드 시 어제의 보상금을 잔고에 동기화
+  // ledger가 로드된 후에 실행되어야 함
   useEffect(() => {
-    syncYesterdayReward();
-  }, []);
+    if (!ledgerLoading && householdLedger && !synced) {
+      syncYesterdayReward();
+      setSynced(true);
+    }
+  }, [ledgerLoading, householdLedger, synced, syncYesterdayReward]);
 
   const handleLogout = async () => {
     try {
