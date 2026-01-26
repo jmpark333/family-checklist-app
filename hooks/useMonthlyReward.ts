@@ -8,14 +8,16 @@ import { useChecklist } from "./useChecklist";
 import { getTodayKey } from "@/lib/utils";
 
 export function useMonthlyReward() {
-  const { currentUser } = useAuth();
+  const { userData } = useAuth();
   const { todayReward } = useChecklist();
   const [monthlyReward, setMonthlyReward] = useState(0);
   const [totalBalance, setTotalBalance] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const familyId = userData?.familyId;
+
   useEffect(() => {
-    if (!currentUser) return;
+    if (!familyId) return;
 
     const fetchMonthlyData = async () => {
       setLoading(true);
@@ -32,9 +34,9 @@ export function useMonthlyReward() {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const userData = data[currentUser.uid];
-          if (userData && userData.totalReward) {
-            monthlySum = userData.totalReward;
+          const familyData = data[familyId];
+          if (familyData && familyData.totalReward) {
+            monthlySum = familyData.totalReward;
           }
         }
 
@@ -49,7 +51,7 @@ export function useMonthlyReward() {
     };
 
     fetchMonthlyData();
-  }, [currentUser, todayReward]); // todayReward가 변경되면 다시 조회
+  }, [familyId, todayReward]); // todayReward가 변경되면 다시 조회
 
   return { monthlyReward, totalBalance, loading };
 }

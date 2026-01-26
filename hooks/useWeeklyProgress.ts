@@ -8,15 +8,17 @@ import { useChecklist } from "./useChecklist";
 import { getDateKey } from "@/lib/utils";
 
 export function useWeeklyProgress() {
-  const { currentUser } = useAuth();
+  const { userData } = useAuth();
   const { todayReward } = useChecklist(); // 오늘의 보상금이 변경되면 재계산
   const [progress, setProgress] = useState(0);
   const [completed, setCompleted] = useState(0);
   const [total, setTotal] = useState(28); // 4개 항목 × 7일 = 28개
   const [loading, setLoading] = useState(true);
 
+  const familyId = userData?.familyId;
+
   useEffect(() => {
-    if (!currentUser) return;
+    if (!familyId) return;
 
     const fetchWeeklyData = async () => {
       setLoading(true);
@@ -55,9 +57,9 @@ export function useWeeklyProgress() {
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            const userData = data[currentUser.uid];
-            if (userData && userData.items) {
-              const dayCompleted = userData.items.filter((item: any) => item.completed).length;
+            const familyData = data[familyId];
+            if (familyData && familyData.items) {
+              const dayCompleted = familyData.items.filter((item: any) => item.completed).length;
               totalCompleted += dayCompleted;
             }
           }
@@ -77,7 +79,7 @@ export function useWeeklyProgress() {
     };
 
     fetchWeeklyData();
-  }, [currentUser, todayReward]); // todayReward가 변경되면 재계산
+  }, [familyId, todayReward]); // todayReward가 변경되면 재계산
 
   return { progress, completed, total, loading };
 }
