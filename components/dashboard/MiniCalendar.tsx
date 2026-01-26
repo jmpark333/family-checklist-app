@@ -97,12 +97,12 @@ export function MiniCalendar() {
                 caption_label: "text-sm font-medium hidden",
                 nav: "space-x-1 flex items-center hidden",
                 table: "w-full border-collapse space-y-1 mx-auto",
-                head_row: "flex w-full justify-center",
+                head_row: "flex w-full justify-center gap-0.5 sm:gap-1",
                 head_cell:
-                  "text-muted-foreground rounded-md w-[30px] sm:w-9 flex-1 font-normal text-[0.7rem] sm:text-[0.8rem] text-center",
-                row: "flex w-full mt-2 justify-center",
-                cell: "h-7 w-[30px] sm:h-9 sm:w-9 p-0 text-xs sm:text-sm relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-outside)]:text-accent-foreground [&:has([aria-selected])]:bg-accent [&:has([aria-selected])]:text-accent-foreground first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-                day: "h-7 w-[30px] sm:h-9 sm:w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors flex items-center justify-center",
+                  "text-muted-foreground rounded-md w-8 sm:w-10 flex-1 font-normal text-[0.7rem] sm:text-[0.8rem] text-center",
+                row: "flex w-full mt-2 justify-center gap-0.5 sm:gap-1",
+                cell: "h-7 w-8 sm:h-9 sm:w-9 p-0 text-xs sm:text-sm relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected].day-outside)]:text-accent-foreground [&:has([aria-selected])]:bg-accent [&:has([aria-selected])]:text-accent-foreground first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+                day: "h-7 w-8 sm:h-9 sm:w-9 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md transition-colors flex items-center justify-center",
                 day_range_end: "day-range-end",
                 day_selected:
                   "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground",
@@ -130,7 +130,7 @@ export function MiniCalendar() {
 
                 return (
                   <div
-                    className="relative flex items-center justify-center h-7 w-[30px] sm:h-9 sm:w-9 cursor-pointer"
+                    className="relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer"
                     onClick={handleClick}
                   >
                     <div {...props} onClick={undefined as any} />
