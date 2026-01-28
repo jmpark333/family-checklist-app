@@ -86,7 +86,7 @@ export function MiniCalendar() {
               month={currentMonth}
               selected={date}
               onSelect={handleSelectDate}
-              className="rounded-md border"
+              className="rounded-md border [&_.rdp-nav]:hidden"
             modifiers={{
               hasEvent: (date) => eventDays.has(date.getDate()),
             }}
