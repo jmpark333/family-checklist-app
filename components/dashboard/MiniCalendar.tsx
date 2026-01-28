@@ -3,11 +3,12 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateDetailDialog } from "@/components/calendar/DateDetailDialog";
 import { getEventDaysForMonth, isHoliday } from "@/lib/scheduledEvents";
 import { cn } from "@/lib/utils";
+import { useChecklistForCalendar } from "@/hooks/useChecklistForCalendar";
 
 export function MiniCalendar() {
   const [date, setDate] = useState<Date>(new Date());
@@ -18,6 +19,9 @@ export function MiniCalendar() {
   const eventDays = useMemo(() => {
     return getEventDaysForMonth(currentMonth.getFullYear(), currentMonth.getMonth());
   }, [currentMonth]);
+
+  // 현재 월의 체크리스트 완료 날짜들 계산
+  const { completedDates } = useChecklistForCalendar(currentMonth);
 
   // 월 이동
   const navigateMonth = (direction: "prev" | "next") => {
@@ -108,6 +112,7 @@ export function MiniCalendar() {
                 const isCurrentMonth = day.date.getMonth() === currentMonth.getMonth() &&
                                        day.date.getFullYear() === currentMonth.getFullYear();
                 const hasEvent = isCurrentMonth && eventDays.has(day.date.getDate());
+                const isCompleted = isCurrentMonth && completedDates.has(day.date.getDate());
                 const holiday = isHoliday(day.date);
                 const isToday = modifiers.today;
 
@@ -136,6 +141,11 @@ export function MiniCalendar() {
                       </span>
                       {hasEvent && !holiday && (
                         <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+                      )}
+                      {isCompleted && (
+                        <CheckCircle2 
+                          className="absolute top-0 right-0 w-4 h-4 text-green-500 pointer-events-none" 
+                        />
                       )}
                     </div>
                   );
