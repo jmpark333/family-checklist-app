@@ -116,25 +116,24 @@ export function MiniCalendar() {
                   setIsDialogOpen(true);
                 };
 
-                return (
-                  <div
-                    className="relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer"
-                    onClick={handleClick}
-                  >
-                    <div {...props} />
-                    <span
-                      className={cn(
-                        "absolute text-xs sm:text-sm",
-                        holiday && "!text-red-600 !font-bold"
-                      )}
-                    >
-                      {day.date.getDate()}
-                    </span>
-                    {hasEvent && !holiday && (
-                      <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
-                    )}
-                  </div>
-                );
+                 return (
+                   <div
+                     className="relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
+                     onClick={handleClick}
+                   >
+                     <span
+                       className={cn(
+                         "text-xs sm:text-sm",
+                         holiday && "!text-red-600 !font-bold"
+                       )}
+                     >
+                       {day.date.getDate()}
+                     </span>
+                     {hasEvent && !holiday && (
+                       <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+                     )}
+                   </div>
+                 );
               },
             }}
             />
