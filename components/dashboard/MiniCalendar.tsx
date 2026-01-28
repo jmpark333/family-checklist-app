@@ -93,7 +93,6 @@ export function MiniCalendar() {
              classNames={{
                 weekdays: "!flex !w-full !justify-center gap-0.5 sm:gap-1 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 !rounded-t-md py-2",
                 weekday: "!w-8 sm:!w-10 flex-1 font-semibold !text-[0.7rem] sm:!text-[0.8rem] !text-center !text-blue-700 dark:!text-blue-300",
-                today: "!bg-blue-100 dark:!bg-blue-900/50 !text-blue-900 dark:!text-blue-100 !font-bold border-2 !border-blue-400 dark:!border-blue-500 !rounded-md",
               }}
             formatters={{
               formatWeekdayName: (date) => {
