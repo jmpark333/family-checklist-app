@@ -103,12 +103,13 @@ export function MiniCalendar() {
               },
             }}
             components={{
-              Day: ({ day, ...props }) => {
+              Day: ({ day, modifiers, ...props }) => {
                 // 현재 월의 날짜인지 확인 (이전/다음 달의 날짜 제외)
                 const isCurrentMonth = day.date.getMonth() === currentMonth.getMonth() &&
                                        day.date.getFullYear() === currentMonth.getFullYear();
                 const hasEvent = isCurrentMonth && eventDays.has(day.date.getDate());
                 const holiday = isHoliday(day.date);
+                const isToday = modifiers.today;
 
                 // 날짜 클릭 핸들러 - 직접 처리
                 const handleClick = () => {
@@ -116,24 +117,28 @@ export function MiniCalendar() {
                   setIsDialogOpen(true);
                 };
 
-                 return (
-                   <div
-                     className="relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground transition-colors"
-                     onClick={handleClick}
-                   >
-                     <span
-                       className={cn(
-                         "text-xs sm:text-sm",
-                         holiday && "!text-red-600 !font-bold"
-                       )}
-                     >
-                       {day.date.getDate()}
-                     </span>
-                     {hasEvent && !holiday && (
-                       <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
-                     )}
-                   </div>
-                 );
+                  return (
+                    <div
+                      className={cn(
+                        "relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
+                        isToday && "!bg-blue-100 dark:!bg-blue-900/50 !border-2 !border-blue-400 dark:!border-blue-500"
+                      )}
+                      onClick={handleClick}
+                    >
+                      <span
+                        className={cn(
+                          "text-xs sm:text-sm",
+                          holiday && "!text-red-600 !font-bold",
+                          isToday && "!text-blue-900 dark:!text-blue-100 !font-bold"
+                        )}
+                      >
+                        {day.date.getDate()}
+                      </span>
+                      {hasEvent && !holiday && (
+                        <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
+                      )}
+                    </div>
+                  );
               },
             }}
             />
