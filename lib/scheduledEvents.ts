@@ -108,6 +108,40 @@ export function getEventsForDate(date: Date): Event[] {
   });
 }
 
+// 2026년 대한민국 공휴일
+const HOLIDAYS_2026: { [key: string]: string } = {
+  "1-1": "신정",
+  "2-15": "설날 연휴",
+  "2-16": "설날",
+  "2-17": "설날 연휴",
+  "2-18": "설날 연휴",
+  "3-1": "삼일절",
+  "5-5": "어린이날",
+  "5-24": "부처님오신날",
+  "6-6": "현충일",
+  "8-15": "광복절",
+  "9-23": "추석 연휴",
+  "9-24": "추석",
+  "9-25": "추석 연휴",
+  "9-26": "추석 연휴",
+  "10-3": "개천절",
+  "10-9": "한글날",
+  "12-25": "크리스마스",
+};
+
+// 공휴일 여부 확인
+export function isHoliday(date: Date): boolean {
+  const day = date.getDay();
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const dayOfMonth = date.getDate();
+
+  if (year !== 2026) return false;
+
+  const key = `${month}-${dayOfMonth}`;
+  return day === 0 || key in HOLIDAYS_2026;
+}
+
 // 월에 해당하는 일정이 있는 날짜들 가져오기
 export function getEventDaysForMonth(year: number, month: number): Set<number> {
   const days = new Set<number>();
