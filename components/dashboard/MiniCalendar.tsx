@@ -6,7 +6,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DateDetailDialog } from "@/components/calendar/DateDetailDialog";
-import { getEventDaysForMonth } from "@/lib/scheduledEvents";
+import { getEventDaysForMonth, isHoliday } from "@/lib/scheduledEvents";
+import { cn } from "@/lib/utils";
 
 export function MiniCalendar() {
   const [date, setDate] = useState<Date>(new Date());
@@ -107,6 +108,7 @@ export function MiniCalendar() {
                 const isCurrentMonth = day.date.getMonth() === currentMonth.getMonth() &&
                                        day.date.getFullYear() === currentMonth.getFullYear();
                 const hasEvent = isCurrentMonth && eventDays.has(day.date.getDate());
+                const holiday = isHoliday(day.date);
 
                 // 날짜 클릭 핸들러 - 직접 처리
                 const handleClick = () => {
@@ -120,7 +122,15 @@ export function MiniCalendar() {
                     onClick={handleClick}
                   >
                     <div {...props} />
-                    {hasEvent && (
+                    <span
+                      className={cn(
+                        "absolute text-xs sm:text-sm",
+                        holiday && "!text-red-600 !font-bold"
+                      )}
+                    >
+                      {day.date.getDate()}
+                    </span>
+                    {hasEvent && !holiday && (
                       <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
                     )}
                   </div>
