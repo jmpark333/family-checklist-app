@@ -5,11 +5,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { CATEGORIES } from "@/hooks/useLedger";
 
-export function StatsTab() {
+interface StatsTabProps {
+  year: number;
+  month: number;
+}
+
+export function StatsTab({ year, month }: StatsTabProps) {
   const { ledger, getMonthlyExpense, getCategoryStats } = useLedger();
 
-  const monthlyExpense = getMonthlyExpense();
-  const categoryStats = getCategoryStats();
+  const monthlyExpense = getMonthlyExpense(year, month);
+  const categoryStats = getCategoryStats(year, month);
 
   const budgetPercentage = ledger
     ? Math.round((monthlyExpense / ledger.monthlyBudget) * 100)

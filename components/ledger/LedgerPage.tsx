@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLedger } from "@/hooks/useLedger";
 import { HomeTab } from "./tabs/HomeTab";
 import { HistoryTab } from "./tabs/HistoryTab";
@@ -19,13 +19,34 @@ export function LedgerPage() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [isTransactionDialogOpen, setIsTransactionDialogOpen] = useState(false);
   const [isBudgetDialogOpen, setIsBudgetDialogOpen] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
 
   const {
-    ledger,
     loading
   } = useLedger();
 
   const isParent = userData?.role === "parent";
+
+  const handlePrevMonth = () => {
+    if (selectedMonth === 1) {
+      setSelectedYear(selectedYear - 1);
+      setSelectedMonth(12);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  };
+
+  const handleNextMonth = () => {
+    if (selectedMonth === 12) {
+      setSelectedYear(selectedYear + 1);
+      setSelectedMonth(1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  };
+
+  const formatDateKey = () => `${selectedYear}년 ${selectedMonth}월`;
 
   if (loading) {
     return (
@@ -60,11 +81,32 @@ export function LedgerPage() {
         </div>
       </div>
 
+      {/* 월 선택 */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700">
+        <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between">
+          <button
+            onClick={handlePrevMonth}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold">{formatDateKey()}</span>
+          </div>
+          <button
+            onClick={handleNextMonth}
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
       {/* 탭 콘텐츠 */}
       <div className="max-w-md mx-auto px-4 py-6">
-        {activeTab === "home" && <HomeTab />}
-        {activeTab === "history" && <HistoryTab />}
-        {activeTab === "stats" && <StatsTab />}
+        {activeTab === "home" && <HomeTab year={selectedYear} month={selectedMonth} />}
+        {activeTab === "history" && <HistoryTab year={selectedYear} month={selectedMonth} />}
+        {activeTab === "stats" && <StatsTab year={selectedYear} month={selectedMonth} />}
       </div>
 
       {/* 하단 탭 네비게이션 */}

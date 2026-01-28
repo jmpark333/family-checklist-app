@@ -7,7 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { TransactionDialog } from "../TransactionDialog";
 
-export function HomeTab() {
+interface HomeTabProps {
+  year: number;
+  month: number;
+}
+
+export function HomeTab({ year, month }: HomeTabProps) {
   const {
     ledger,
     getMonthlyExpense,
@@ -18,8 +23,8 @@ export function HomeTab() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-  const monthlyExpense = getMonthlyExpense();
-  const remainingBudget = getRemainingBudget();
+  const monthlyExpense = getMonthlyExpense(year, month);
+  const remainingBudget = getRemainingBudget(year, month);
   const todayExpense = getTodayExpense();
   const recentExpenses = getRecentExpenses();
 

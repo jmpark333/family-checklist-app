@@ -189,10 +189,12 @@ export function useLedger() {
     }
   };
 
-  // 이번 달 지출 계산
-  const getMonthlyExpense = (): number => {
+  // 특정 월의 지출 계산
+  const getMonthlyExpense = (year?: number, month?: number): number => {
     const now = new Date();
-    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const targetYear = year ?? now.getFullYear();
+    const targetMonth = month ?? now.getMonth() + 1;
+    const monthKey = `${targetYear}-${String(targetMonth).padStart(2, "0")}`;
 
     return transactions
       .filter((t) => t.type === "expense" && t.date.startsWith(monthKey))
@@ -209,15 +211,17 @@ export function useLedger() {
   };
 
   // 남은 예산 계산
-  const getRemainingBudget = (): number => {
+  const getRemainingBudget = (year?: number, month?: number): number => {
     if (!ledger) return 0;
-    return ledger.monthlyBudget - getMonthlyExpense();
+    return ledger.monthlyBudget - getMonthlyExpense(year, month);
   };
 
   // 카테고리별 지출 통계
-  const getCategoryStats = (): Record<Category, number> => {
+  const getCategoryStats = (year?: number, month?: number): Record<Category, number> => {
     const now = new Date();
-    const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const targetYear = year ?? now.getFullYear();
+    const targetMonth = month ?? now.getMonth() + 1;
+    const monthKey = `${targetYear}-${String(targetMonth).padStart(2, "0")}`;
 
     const stats: Record<string, number> = {
       food: 0,
@@ -243,6 +247,18 @@ export function useLedger() {
     return transactions
       .filter((t) => t.type === "expense")
       .slice(0, 5);
+  };
+
+  // 특정 월의 지출 내역
+  const getMonthlyExpenses = (year?: number, month?: number): LedgerTransaction[] => {
+    const now = new Date();
+    const targetYear = year ?? now.getFullYear();
+    const targetMonth = month ?? now.getMonth() + 1;
+    const monthKey = `${targetYear}-${String(targetMonth).padStart(2, "0")}`;
+
+    return transactions
+      .filter((t) => t.date.startsWith(monthKey))
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   };
 
   // 어제의 체크리스트 보상금을 잔고에 동기화
@@ -299,6 +315,7 @@ export function useLedger() {
     getRemainingBudget,
     getCategoryStats,
     getRecentExpenses,
+    getMonthlyExpenses,
     CATEGORIES,
     syncYesterdayReward,
   };

@@ -11,8 +11,13 @@ import { LedgerTransaction } from "@/lib/types";
 
 type FilterType = "all" | "income" | "expense";
 
-export function HistoryTab() {
-  const { transactions, deleteTransaction } = useLedger();
+interface HistoryTabProps {
+  year: number;
+  month: number;
+}
+
+export function HistoryTab({ year, month }: HistoryTabProps) {
+  const { deleteTransaction, getMonthlyExpenses } = useLedger();
   const [filter, setFilter] = useState<FilterType>("all");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<LedgerTransaction | null>(null);
@@ -35,8 +40,9 @@ export function HistoryTab() {
     }
   };
 
-  // 필터링된 내역
-  const filteredTransactions = transactions.filter((t) => {
+  const monthlyTransactions = getMonthlyExpenses(year, month);
+
+  const filteredTransactions = monthlyTransactions.filter((t) => {
     if (filter === "all") return true;
     return t.type === filter;
   });
@@ -48,7 +54,7 @@ export function HistoryTab() {
     }
     acc[t.date].push(t);
     return acc;
-  }, {} as Record<string, typeof transactions>);
+  }, {} as Record<string, LedgerTransaction[]>);
 
   return (
     <div className="space-y-4">
