@@ -11,6 +11,7 @@ import { DailySummary } from "./DailySummary";
 import { TodayEvents } from "./TodayEvents";
 import { DailyExpense } from "./DailyExpense";
 import { SettingsPage } from "../settings/SettingsPage";
+import { MotivationPopup } from "../auth/MotivationPopup";
 import { LogOut, Settings } from "lucide-react";
 
 // 개발 모드에서만 마이그레이션 함수 로드
@@ -52,6 +53,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      {userData?.role === "child" && <MotivationPopup />}
       {/* 헤더 */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 py-4">
