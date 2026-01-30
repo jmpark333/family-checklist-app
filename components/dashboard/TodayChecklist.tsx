@@ -105,43 +105,47 @@ export function TodayChecklist() {
                    </button>
                  )}
 
-                  {/* 보상금 표시/편집 */}
-                  {isParent && editingItemId === item.id ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        value={editingReward}
-                        onChange={(e) => setEditingReward(e.target.value)}
-                        onBlur={handleSaveEdit}
-                        onKeyDown={handleKeyDown}
-                        className="w-24 h-8 text-sm"
-                        min="0"
-                      />
-                      <span className="text-sm text-gray-500">원</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteItem(item.id)}
-                        className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                 ) : (
-                   <div
-                     className={`flex items-center gap-2 ${isParent ? "cursor-pointer hover:opacity-80" : ""}`}
-                     onClick={() => isParent && handleStartEdit(item.id, item.title, item.reward)}
-                     title={isParent ? "클릭하여 편집" : ""}
-                   >
-                     <Badge
-                       variant={item.completed ? "default" : "secondary"}
-                       className={item.completed ? "bg-green-500" : ""}
+                    {/* 보상금 표시/편집 */}
+                    {isParent && editingItemId === item.id ? (
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={editingReward}
+                          onChange={(e) => setEditingReward(e.target.value)}
+                          onBlur={handleSaveEdit}
+                          onKeyDown={handleKeyDown}
+                          className="w-24 h-8 text-sm"
+                          min="0"
+                        />
+                        <span className="text-sm text-gray-500">원</span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            await deleteItem(item.id);
+                            setEditingItemId(null);
+                          }}
+                          onMouseDown={(e) => e.preventDefault()}
+                          className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                   ) : (
+                     <div
+                       className={`flex items-center gap-2 ${isParent ? "cursor-pointer hover:opacity-80" : ""}`}
+                       onClick={() => isParent && handleStartEdit(item.id, item.title, item.reward)}
+                       title={isParent ? "클릭하여 편집" : ""}
                      >
-                       +₩{item.reward.toLocaleString()}
-                     </Badge>
-                     {isParent && <Pencil className="w-3 h-3 text-gray-400" />}
-                   </div>
-                 )}
+                       <Badge
+                         variant={item.completed ? "default" : "secondary"}
+                         className={item.completed ? "bg-green-500" : ""}
+                       >
+                         +₩{item.reward.toLocaleString()}
+                       </Badge>
+                       {isParent && <Pencil className="w-3 h-3 text-gray-400" />}
+                     </div>
+                   )}
               </div>
             ))}
           </div>

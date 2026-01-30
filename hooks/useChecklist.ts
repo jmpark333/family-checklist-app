@@ -17,7 +17,7 @@ export function useChecklist() {
 
   const familyId = userData?.familyId;
 
-  // 기본 데이터 초기화 - familyId 기반으로 변경
+  // 기본 데이터 초기화 - familyId 기반으로 변경 + 가족 설정에서 체크리스트 항목 가져오기
   const initializeDefaultData = useCallback(async () => {
     if (!familyId) return;
 
@@ -31,13 +31,31 @@ export function useChecklist() {
     const todayKey = getTodayKey();
     const checklistRef = doc(db, "checklists", todayKey);
 
+    const { getDoc } = await import("firebase/firestore");
+    const familyRef = doc(db, "families", familyId);
+    const familySnap = await getDoc(familyRef);
+
+    let itemsToUse = defaultItems;
+
+    if (familySnap.exists()) {
+      const familyData = familySnap.data();
+      if (familyData.checklistItems && Array.isArray(familyData.checklistItems) && familyData.checklistItems.length > 0) {
+        itemsToUse = familyData.checklistItems.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          reward: item.reward,
+          completed: false,
+        }));
+      }
+    }
+
     await setDoc(
       checklistRef,
       {
         [familyId]: {
           familyId,
           date: todayKey,
-          items: defaultItems,
+          items: itemsToUse,
           events: [],
           dailyExpense: 0,
           totalReward: 0,
@@ -46,7 +64,7 @@ export function useChecklist() {
       { merge: true }
     );
 
-    setChecklist(defaultItems);
+    setChecklist(itemsToUse);
   }, [familyId]);
 
   // 체크리스트 데이터 로드 - familyId 기반 + 하위 호환성
