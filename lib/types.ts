@@ -66,6 +66,7 @@ export interface HouseholdLedger {
   initialBalance: number;   // 시작 잔액
   currentBalance: number;   // 현재 잔액 (실시간 계산)
   paidRewards?: Record<string, number>;  // 지급된 보상금: { "YYYY-MM-DD": amount }
+  rewardTransactions?: Record<string, string>;  // 보상금 트랜잭션 ID: { "YYYY-MM-DD": transactionId }
 }
 
 // 트랜잭션 (기존 호환성 유지)

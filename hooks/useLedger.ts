@@ -263,18 +263,12 @@ export function useLedger() {
 
   // 어제의 체크리스트 보상금을 잔고에 동기화
   const syncYesterdayReward = async () => {
-    if (!familyId || !ledger) return;
+    if (!familyId || !ledger || !currentUser) return;
 
     // 어제 날짜 계산 (Local timezone)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
     const yesterdayKey = getDateKey(yesterday);
-
-    // 이미 지급되었는지 확인
-    if (ledger.paidRewards?.[yesterdayKey]) {
-      console.log("[보상 동기화] 어제 보상 이미 지급됨:", yesterdayKey);
-      return;
-    }
 
     // 어제의 체크리스트에서 보상금 읽기
     const checklistRef = doc(db, "checklists", yesterdayKey);
@@ -288,18 +282,55 @@ export function useLedger() {
     const yesterdayData = checklistSnap.data();
     const yesterdayReward = yesterdayData[familyId]?.totalReward || 0;
 
-    if (yesterdayReward === 0) {
-      console.log("[보상 동기화] 어제 보상금 0원:", yesterdayKey);
+    const existingRewardAmount = ledger.paidRewards?.[yesterdayKey] || 0;
+    const existingTransactionId = ledger.rewardTransactions?.[yesterdayKey];
+
+    if (yesterdayReward === existingRewardAmount) {
+      console.log("[보상 동기화] 보상금 변동 없음:", yesterdayKey, yesterdayReward);
       return;
     }
 
-    // 잔고에 보상금 추가 및 지급 기록
+    const balanceDiff = yesterdayReward - existingRewardAmount;
+
+    if (existingTransactionId) {
+      if (yesterdayReward === 0) {
+        // 보상금이 0원이면 트랜잭션 삭제
+        await deleteDoc(doc(db, "transactions", existingTransactionId));
+        console.log("[보상 동기화] 보상금 0원, 트랜잭션 삭제:", yesterdayKey);
+      } else {
+        // 보상금이 변경되면 트랜잭션 업데이트
+        await updateDoc(doc(db, "transactions", existingTransactionId), {
+          amount: yesterdayReward,
+        });
+        console.log("[보상 동기화] 보상금 변경, 트랜잭션 업데이트:", yesterdayKey, existingRewardAmount, "->", yesterdayReward);
+      }
+    } else if (yesterdayReward > 0) {
+      // 새로운 보상금 수입 트랜잭션 생성
+      const rewardTransactionRef = await addDoc(collection(db, "transactions"), {
+        familyId,
+        userId: currentUser.uid,
+        date: yesterdayKey,
+        type: "income",
+        category: "allowance",
+        amount: yesterdayReward,
+        memo: "체크리스트 보상금",
+        createdAt: new Date().toISOString(),
+      });
+      console.log("[보상 동기화] 새로운 보상금 트랜잭션 생성:", yesterdayKey, yesterdayReward);
+
+      // 트랜잭션 ID 저장
+      await updateDoc(doc(db, "households", familyId), {
+        [`rewardTransactions.${yesterdayKey}`]: rewardTransactionRef.id,
+      });
+    }
+
+    // 잔고 및 지급 보상금 업데이트
     await updateDoc(doc(db, "households", familyId), {
-      currentBalance: ledger.currentBalance + yesterdayReward,
+      currentBalance: ledger.currentBalance + balanceDiff,
       [`paidRewards.${yesterdayKey}`]: yesterdayReward,
     });
 
-    console.log("[보상 동기화] 어제 보상금 지급 완료:", yesterdayKey, yesterdayReward);
+    console.log("[보상 동기화] 완료:", yesterdayKey, "잔고 변동:", balanceDiff);
   };
 
   return {
