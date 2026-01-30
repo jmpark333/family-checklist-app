@@ -52,32 +52,32 @@ export function MiniCalendar() {
             <div className="flex items-center justify-center gap-1 mb-2">
               <Button
                 variant="ghost"
-                size="sm"
+                size="default"
                 onClick={() => navigateMonth("prev")}
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-5 h-5" />
               </Button>
-              <span className="text-sm sm:text-base font-medium min-w-[120px] text-center">
+              <span className="text-base sm:text-lg font-medium min-w-[140px] text-center">
                 {currentMonth.getFullYear()}년 {monthNames[currentMonth.getMonth()]}
               </span>
               <Button
                 variant="ghost"
-                size="sm"
+                size="default"
                 onClick={() => navigateMonth("next")}
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-5 h-5" />
               </Button>
             </div>
             <div className="flex justify-center">
               <Button
                 variant="outline"
-                size="sm"
+                size="default"
                 onClick={() => {
                   const now = new Date();
                   setDate(now);
                   setCurrentMonth(now);
                 }}
-                className="text-xs px-3"
+                className="text-sm px-4 py-2"
               >
                 오늘
               </Button>
@@ -97,7 +97,7 @@ export function MiniCalendar() {
             }}
               classNames={{
                 weekdays: "!flex !w-full !justify-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 !rounded-t-md py-2",
-                weekday: "!w-8 sm:!w-9 font-semibold !text-[0.7rem] sm:!text-[0.8rem] !text-center !text-blue-700 dark:!text-blue-300",
+                weekday: "!w-10 sm:!w-12 font-semibold !text-[0.85rem] sm:!text-[1rem] !text-center !text-blue-700 dark:!text-blue-300",
               }}
             formatters={{
               formatWeekdayName: (date) => {
@@ -125,14 +125,14 @@ export function MiniCalendar() {
                   return (
                     <div
                       className={cn(
-                        "relative flex items-center justify-center h-7 w-8 sm:h-9 sm:w-9 cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
+                        "relative flex items-center justify-center h-9 w-10 sm:h-11 sm:w-12 cursor-pointer rounded-md hover:bg-accent hover:text-accent-foreground transition-colors",
                         isToday && "!bg-blue-100 dark:!bg-blue-900/50 !border-2 !border-blue-400 dark:!border-blue-500"
                       )}
                       onClick={handleClick}
                     >
                       <span
                         className={cn(
-                          "text-xs sm:text-sm",
+                          "text-sm sm:text-base",
                           holiday && "!text-red-600 !font-bold",
                           isToday && "!text-blue-900 dark:!text-blue-100 !font-bold"
                         )}
@@ -143,8 +143,8 @@ export function MiniCalendar() {
                         <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full" />
                       )}
                       {isCompleted && (
-                        <CheckCircle2 
-                          className="absolute top-0 right-0 w-4 h-4 text-green-500 pointer-events-none" 
+                        <CheckCircle2
+                          className="absolute top-0 right-0 w-5 h-5 text-green-500 pointer-events-none"
                         />
                       )}
                     </div>
@@ -153,7 +153,7 @@ export function MiniCalendar() {
             }}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-3 text-center">
+          <p className="text-sm text-gray-500 mt-3 text-center">
             📅 날짜를 클릭하면 상세 내용을 볼 수 있습니다
           </p>
         </CardContent>
