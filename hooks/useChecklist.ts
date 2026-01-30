@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { doc, getDoc, setDoc, updateDoc, onSnapshot, query, where, orderBy, collection } from "firebase/firestore";
+import { useState, useEffect, useCallback } from "react";
+import { doc, setDoc, updateDoc, onSnapshot, query, where, collection } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTodayKey } from "@/lib/utils";
@@ -16,6 +16,38 @@ export function useChecklist() {
   const [loading, setLoading] = useState(true);
 
   const familyId = userData?.familyId;
+
+  // 기본 데이터 초기화 - familyId 기반으로 변경
+  const initializeDefaultData = useCallback(async () => {
+    if (!familyId) return;
+
+    const defaultItems: ChecklistItem[] = [
+      { id: "1", title: "7시 전 기상", reward: 5000, completed: false },
+      { id: "2", title: "8시 전 나가기", reward: 5000, completed: false },
+      { id: "3", title: "모든 약속은 미리 소통하고 결정하기", reward: 5000, completed: false },
+      { id: "4", title: "반말 안하기, 말 예쁘게 하기", reward: 5000, completed: false },
+    ];
+
+    const todayKey = getTodayKey();
+    const checklistRef = doc(db, "checklists", todayKey);
+
+    await setDoc(
+      checklistRef,
+      {
+        [familyId]: {
+          familyId,
+          date: todayKey,
+          items: defaultItems,
+          events: [],
+          dailyExpense: 0,
+          totalReward: 0,
+        },
+      },
+      { merge: true }
+    );
+
+    setChecklist(defaultItems);
+  }, [familyId]);
 
   // 체크리스트 데이터 로드 - familyId 기반 + 하위 호환성
   useEffect(() => {
@@ -72,7 +104,7 @@ export function useChecklist() {
     );
 
     return () => unsubscribe();
-  }, [familyId, currentUser]);
+  }, [familyId, currentUser, initializeDefaultData]);
 
   // 가계부 트랜잭션에서 오늘의 지출 계산
   useEffect(() => {
@@ -127,38 +159,6 @@ export function useChecklist() {
 
     return () => unsubscribe();
   }, [familyId]);
-
-  // 기본 데이터 초기화 - familyId 기반으로 변경
-  const initializeDefaultData = async () => {
-    if (!familyId) return;
-
-    const defaultItems: ChecklistItem[] = [
-      { id: "1", title: "7시 전 기상", reward: 5000, completed: false },
-      { id: "2", title: "8시 전 나가기", reward: 5000, completed: false },
-      { id: "3", title: "모든 약속은 미리 소통하고 결정하기", reward: 5000, completed: false },
-      { id: "4", title: "반말 안하기, 말 예쁘게 하기", reward: 5000, completed: false },
-    ];
-
-    const todayKey = getTodayKey();
-    const checklistRef = doc(db, "checklists", todayKey);
-
-    await setDoc(
-      checklistRef,
-      {
-        [familyId]: {
-          familyId,
-          date: todayKey,
-          items: defaultItems,
-          events: [],
-          dailyExpense: 0,
-          totalReward: 0,
-        },
-      },
-      { merge: true }
-    );
-
-    setChecklist(defaultItems);
-  };
 
   // 체크리스트 항목 토글
   const toggleItem = async (itemId: string) => {

@@ -43,7 +43,8 @@ export function TodayChecklist() {
       handleSaveEdit();
     } else if (e.key === "Escape") {
       setEditingItemId(null);
-      setEditValue("");
+      setEditingTitle("");
+      setEditingReward("");
     }
   };
 
