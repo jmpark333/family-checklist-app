@@ -206,6 +206,27 @@ export function useChecklist() {
     });
   };
 
+  // 체크리스트 항목 수정 (제목, 보상금)
+  const updateItem = async (itemId: string, updatedData: { title?: string; reward?: number }) => {
+    if (!familyId) return;
+
+    const updatedItems = checklist.map((item) =>
+      item.id === itemId ? { ...item, ...updatedData } : item
+    );
+
+    setChecklist(updatedItems);
+
+    const todayKey = getTodayKey();
+    const totalReward = updatedItems
+      .filter((item) => item.completed)
+      .reduce((sum, item) => sum + item.reward, 0);
+
+    await updateDoc(doc(db, "checklists", todayKey), {
+      [`${familyId}.items`]: updatedItems,
+      [`${familyId}.totalReward`]: totalReward,
+    });
+  };
+
   // 이벤트 추가
   const addEvent = async (event: Omit<Event, "id">) => {
     if (!familyId) return;
@@ -278,6 +299,7 @@ export function useChecklist() {
     loading,
     toggleItem,
     updateReward,
+    updateItem,
     addEvent,
     updateEvent,
     deleteEvent,
