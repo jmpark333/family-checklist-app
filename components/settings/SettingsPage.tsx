@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getTodayKey } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,12 +101,12 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     setNewItemTitle("");
     setNewItemReward(5000);
 
-    await handleSaveChecklist();
+    await handleSaveChecklist(true);
   };
 
   const handleRemoveItem = async (id: string) => {
     setChecklistItems(checklistItems.filter((item) => item.id !== id));
-    await handleSaveChecklist();
+    await handleSaveChecklist(true);
   };
 
   const handleUpdateItemTitle = async (id: string, title: string) => {
@@ -125,15 +126,56 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const handleSaveChecklist = async (showAlert: boolean = false) => {
     if (!currentUser || !isParent || saving) return;
 
+    const familyId = userData?.familyId;
+    if (!familyId) {
+      console.error("familyId가 없습니다.");
+      if (showAlert) {
+        alert("가족 ID를 찾을 수 없습니다. 다시 로그인해주세요.");
+      }
+      return;
+    }
+
     setSaving(true);
     try {
-      const familyId = userData?.familyId;
-      if (familyId) {
-        const familyRef = doc(db, "families", familyId);
-        await updateDoc(familyRef, { checklistItems });
-        if (showAlert) {
-          alert("체크리스트가 저장되었습니다.");
+      const familyRef = doc(db, "families", familyId);
+      await setDoc(familyRef, { checklistItems }, { merge: true });
+
+      const todayKey = getTodayKey();
+      const todayChecklistRef = doc(db, "checklists", todayKey);
+      
+      const todaySnap = await getDoc(todayChecklistRef);
+      let updatedTodayItems = checklistItems.map(item => ({ ...item, completed: false }));
+
+      if (todaySnap.exists()) {
+        const todayData = todaySnap.data();
+        const familyChecklist = todayData[familyId];
+        if (familyChecklist?.items) {
+          const existingItems = familyChecklist.items;
+          updatedTodayItems = checklistItems.map(newItem => {
+            const existingItem = existingItems.find((item: any) => item.id === newItem.id);
+            return {
+              ...newItem,
+              completed: existingItem?.completed || false
+            };
+          });
         }
+      }
+
+      const totalReward = updatedTodayItems
+        .filter((item) => item.completed)
+        .reduce((sum, item) => sum + item.reward, 0);
+
+      await setDoc(todayChecklistRef, {
+        [familyId]: {
+          familyId,
+          date: todayKey,
+          items: updatedTodayItems,
+          totalReward
+        }
+      }, { merge: true });
+
+      if (showAlert) {
+        alert("체크리스트가 저장되었습니다.");
       }
     } catch (error) {
       console.error("체크리스트 저장 오류:", error);
