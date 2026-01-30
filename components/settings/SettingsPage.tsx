@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Settings, Plus, Trash2, Save } from "lucide-react";
+import { Settings, Plus, Trash2 } from "lucide-react";
 import { ChecklistItem } from "@/lib/types";
 
 interface SettingsPageProps {
@@ -20,7 +19,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
   const { currentUser, userData } = useAuth();
   const [checklistItems, setChecklistItems] = useState<Omit<ChecklistItem, "completed">[]>([]);
   const [currentBalance, setCurrentBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [newItemTitle, setNewItemTitle] = useState("");
   const [newItemReward, setNewItemReward] = useState(5000);
@@ -31,7 +29,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     if (!currentUser || !isParent) return;
 
     const fetchSettings = async () => {
-      setLoading(true);
       try {
         // 사용자 문서에서 현재 잔고 가져오기
         const userRef = doc(db, "users", currentUser.uid);
@@ -67,8 +64,6 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
         }
       } catch (error) {
         console.error("설정 로드 오류:", error);
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -91,7 +86,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     }
   };
 
-  const handleAddItem = () => {
+  const handleAddItem = async () => {
     if (!newItemTitle.trim()) return;
 
     const newItem: ChecklistItem & { completed: boolean } = {
@@ -104,26 +99,31 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     setChecklistItems([...checklistItems, { id: newItem.id, title: newItem.title, reward: newItem.reward }]);
     setNewItemTitle("");
     setNewItemReward(5000);
+
+    await handleSaveChecklist();
   };
 
-  const handleRemoveItem = (id: string) => {
+  const handleRemoveItem = async (id: string) => {
     setChecklistItems(checklistItems.filter((item) => item.id !== id));
+    await handleSaveChecklist();
   };
 
-  const handleUpdateItemTitle = (id: string, title: string) => {
+  const handleUpdateItemTitle = async (id: string, title: string) => {
     setChecklistItems(checklistItems.map((item) =>
       item.id === id ? { ...item, title } : item
     ));
+    await handleSaveChecklist();
   };
 
-  const handleUpdateItemReward = (id: string, reward: number) => {
+  const handleUpdateItemReward = async (id: string, reward: number) => {
     setChecklistItems(checklistItems.map((item) =>
       item.id === id ? { ...item, reward } : item
     ));
+    await handleSaveChecklist();
   };
 
-  const handleSaveChecklist = async () => {
-    if (!currentUser || !isParent) return;
+  const handleSaveChecklist = async (showAlert: boolean = false) => {
+    if (!currentUser || !isParent || saving) return;
 
     setSaving(true);
     try {
@@ -131,11 +131,15 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
       if (familyId) {
         const familyRef = doc(db, "families", familyId);
         await updateDoc(familyRef, { checklistItems });
-        alert("체크리스트가 저장되었습니다.");
+        if (showAlert) {
+          alert("체크리스트가 저장되었습니다.");
+        }
       }
     } catch (error) {
       console.error("체크리스트 저장 오류:", error);
-      alert("저장에 실패했습니다.");
+      if (showAlert) {
+        alert("저장에 실패했습니다.");
+      }
     } finally {
       setSaving(false);
     }
@@ -256,7 +260,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
                 </div>
               </div>
 
-              <Button onClick={handleSaveChecklist} disabled={saving} className="w-full">
+              <Button onClick={() => handleSaveChecklist(true)} disabled={saving} className="w-full">
                 {saving ? "저장 중..." : "체크리스트 저장"}
               </Button>
             </div>
