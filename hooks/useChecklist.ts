@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { doc, setDoc, updateDoc, onSnapshot, query, where, collection } from "firebase/firestore";
+import { doc, setDoc, updateDoc, onSnapshot, query, where, collection, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { getTodayKey } from "@/lib/utils";
@@ -17,16 +17,36 @@ export function useChecklist() {
 
   const familyId = userData?.familyId;
 
-  // 기본 데이터 초기화 - familyId 기반으로 변경
+  // 기본 데이터 초기화 - families 컬렉션에서 마스터 템플릿 읽기
   const initializeDefaultData = useCallback(async () => {
     if (!familyId) return;
 
-    const defaultItems: ChecklistItem[] = [
-      { id: "1", title: "7시 전 기상", reward: 5000, completed: false },
-      { id: "2", title: "8시 전 나가기", reward: 5000, completed: false },
-      { id: "3", title: "모든 약속은 미리 소통하고 결정하기", reward: 5000, completed: false },
-      { id: "4", title: "반말 안하기, 말 예쁘게 하기", reward: 5000, completed: false },
-    ];
+    const familyRef = doc(db, "families", familyId);
+    const familySnap = await getDoc(familyRef);
+
+    let templateItems: Omit<ChecklistItem, "completed">[] = [];
+
+    if (familySnap.exists()) {
+      const familyData = familySnap.data();
+      if (familyData.checklistItems) {
+        templateItems = familyData.checklistItems;
+      }
+    }
+
+    // 템플릿이 없으면 기본값 사용
+    if (templateItems.length === 0) {
+      templateItems = [
+        { id: "1", title: "7시 전 기상", reward: 5000 },
+        { id: "2", title: "8시 전 나가기", reward: 5000 },
+        { id: "3", title: "모든 약속은 미리 소통하고 결정하기", reward: 5000 },
+        { id: "4", title: "반말 안하기, 말 예쁘게 하기", reward: 5000 },
+      ];
+    }
+
+    const defaultItems: ChecklistItem[] = templateItems.map((item) => ({
+      ...item,
+      completed: false,
+    }));
 
     const todayKey = getTodayKey();
     const checklistRef = doc(db, "checklists", todayKey);
@@ -183,7 +203,7 @@ export function useChecklist() {
     });
   };
 
-  // 체크리스트 항목 보상금 수정
+  // 체크리스트 항목 보상금 수정 - 마스터 템플릿도 업데이트
   const updateReward = async (itemId: string, newReward: number) => {
     if (!familyId) return;
 
@@ -191,10 +211,8 @@ export function useChecklist() {
       item.id === itemId ? { ...item, reward: newReward } : item
     );
 
-    // 로컬 상태 업데이트
     setChecklist(updatedItems);
 
-    // Firestore 업데이트
     const todayKey = getTodayKey();
     const totalReward = updatedItems
       .filter((item) => item.completed)
@@ -204,9 +222,21 @@ export function useChecklist() {
       [`${familyId}.items`]: updatedItems,
       [`${familyId}.totalReward`]: totalReward,
     });
+
+    // 마스터 템플릿도 업데이트
+    const familyRef = doc(db, "families", familyId);
+    const familySnap = await getDoc(familyRef);
+    if (familySnap.exists()) {
+      const familyData = familySnap.data();
+      const currentTemplate = familyData.checklistItems || [];
+      const updatedTemplate = currentTemplate.map((item: any) =>
+        item.id === itemId ? { ...item, reward: newReward } : item
+      );
+      await setDoc(familyRef, { checklistItems: updatedTemplate }, { merge: true });
+    }
   };
 
-  // 체크리스트 항목 수정 (제목, 보상금)
+  // 체크리스트 항목 수정 (제목, 보상금) - 마스터 템플릿도 업데이트
   const updateItem = async (itemId: string, updatedData: { title?: string; reward?: number }) => {
     if (!familyId) return;
 
@@ -225,6 +255,18 @@ export function useChecklist() {
       [`${familyId}.items`]: updatedItems,
       [`${familyId}.totalReward`]: totalReward,
     });
+
+    // 마스터 템플릿도 업데이트
+    const familyRef = doc(db, "families", familyId);
+    const familySnap = await getDoc(familyRef);
+    if (familySnap.exists()) {
+      const familyData = familySnap.data();
+      const currentTemplate = familyData.checklistItems || [];
+      const updatedTemplate = currentTemplate.map((item: any) =>
+        item.id === itemId ? { ...item, ...updatedData } : item
+      );
+      await setDoc(familyRef, { checklistItems: updatedTemplate }, { merge: true });
+    }
   };
 
   // 이벤트 추가
@@ -273,7 +315,7 @@ export function useChecklist() {
     });
   };
 
-  // 체크리스트 항목 삭제
+  // 체크리스트 항목 삭제 - 마스터 템플릿도 업데이트
   const deleteItem = async (itemId: string) => {
     if (!familyId) return;
 
@@ -290,6 +332,16 @@ export function useChecklist() {
       [`${familyId}.items`]: updatedItems,
       [`${familyId}.totalReward`]: totalReward,
     });
+
+    // 마스터 템플릿도 업데이트
+    const familyRef = doc(db, "families", familyId);
+    const familySnap = await getDoc(familyRef);
+    if (familySnap.exists()) {
+      const familyData = familySnap.data();
+      const currentTemplate = familyData.checklistItems || [];
+      const updatedTemplate = currentTemplate.filter((item: any) => item.id !== itemId);
+      await setDoc(familyRef, { checklistItems: updatedTemplate }, { merge: true });
+    }
   };
 
   // 소비금액 업데이트 (더 이상 사용하지 않음, transactions 사용)
@@ -309,6 +361,42 @@ export function useChecklist() {
     .filter((item) => item.completed)
     .reduce((sum, item) => sum + item.reward, 0);
 
+  // 체크리스트 항목 추가 - 마스터 템플릿도 업데이트
+  const addItem = async (title: string, reward: number) => {
+    if (!familyId) return;
+
+    const newItem: ChecklistItem = {
+      id: Date.now().toString(),
+      title,
+      reward,
+      completed: false,
+    };
+
+    const updatedItems = [...checklist, newItem];
+
+    setChecklist(updatedItems);
+
+    const todayKey = getTodayKey();
+    const totalReward = updatedItems
+      .filter((item) => item.completed)
+      .reduce((sum, item) => sum + item.reward, 0);
+
+    await updateDoc(doc(db, "checklists", todayKey), {
+      [`${familyId}.items`]: updatedItems,
+      [`${familyId}.totalReward`]: totalReward,
+    });
+
+    // 마스터 템플릿도 업데이트
+    const familyRef = doc(db, "families", familyId);
+    const familySnap = await getDoc(familyRef);
+    if (familySnap.exists()) {
+      const familyData = familySnap.data();
+      const currentTemplate = familyData.checklistItems || [];
+      const updatedTemplate = [...currentTemplate, { id: newItem.id, title: newItem.title, reward: newItem.reward }];
+      await setDoc(familyRef, { checklistItems: updatedTemplate }, { merge: true });
+    }
+  };
+
   return {
     checklist,
     events,
@@ -320,6 +408,7 @@ export function useChecklist() {
     updateReward,
     updateItem,
     deleteItem,
+    addItem,
     addEvent,
     updateEvent,
     deleteEvent,
