@@ -24,14 +24,14 @@ interface DateDetailDialogProps {
 }
 
 export function DateDetailDialog({ date, open, onOpenChange }: DateDetailDialogProps) {
-  const { currentUser } = useAuth();
+  const { userData } = useAuth();
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [dailyExpense, setDailyExpense] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!date || !currentUser || !open) return;
+    if (!date || !userData || !open) return;
 
     const fetchDateData = async () => {
       setLoading(true);
@@ -43,11 +43,11 @@ export function DateDetailDialog({ date, open, onOpenChange }: DateDetailDialogP
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          const userData = data[currentUser.uid];
-          if (userData) {
-            setChecklist(userData.items || []);
-            setEvents(userData.events || []);
-            setDailyExpense(userData.dailyExpense || 0);
+          const familyData = data[userData.familyId];
+          if (familyData) {
+            setChecklist(familyData.items || []);
+            setEvents(familyData.events || []);
+            setDailyExpense(familyData.dailyExpense || 0);
           }
         } else {
           // 데이터가 없으면 초기화
@@ -63,7 +63,7 @@ export function DateDetailDialog({ date, open, onOpenChange }: DateDetailDialogP
     };
 
     fetchDateData();
-  }, [date, currentUser, open]);
+  }, [date, userData, open]);
 
   // 고정 일정 가져오기 (Firestore 데이터와 병합)
   const allEvents = useMemo(() => {
