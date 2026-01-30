@@ -95,9 +95,9 @@ export function MiniCalendar() {
             modifiers={{
               hasEvent: (date) => eventDays.has(date.getDate()),
             }}
-             classNames={{
-                weekdays: "!flex !w-full !justify-center gap-0.5 sm:gap-1 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 !rounded-t-md py-2",
-                weekday: "!w-8 sm:!w-10 flex-1 font-semibold !text-[0.7rem] sm:!text-[0.8rem] !text-center !text-blue-700 dark:!text-blue-300",
+              classNames={{
+                weekdays: "!flex !w-full !justify-center bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 !rounded-t-md py-2",
+                weekday: "!w-8 sm:!w-9 font-semibold !text-[0.7rem] sm:!text-[0.8rem] !text-center !text-blue-700 dark:!text-blue-300",
               }}
             formatters={{
               formatWeekdayName: (date) => {
