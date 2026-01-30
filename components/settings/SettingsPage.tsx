@@ -137,7 +137,7 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     setSaving(true);
     try {
       const familyRef = doc(db, "families", familyId);
-      await updateDoc(familyRef, { checklistItems });
+      await setDoc(familyRef, { checklistItems }, { merge: true });
       if (showAlert) {
         alert("체크리스트가 저장되었습니다.");
       }
