@@ -6,11 +6,12 @@ import { useChecklist } from "@/hooks/useChecklist";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { CheckCircle2, Circle, Pencil } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react";
 
 export function TodayChecklist() {
   const { userData } = useAuth();
-  const { checklist, todayReward, loading, toggleItem, updateItem } = useChecklist();
+  const { checklist, todayReward, loading, toggleItem, updateItem, deleteItem } = useChecklist();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingReward, setEditingReward] = useState("");
@@ -104,20 +105,28 @@ export function TodayChecklist() {
                    </button>
                  )}
 
-                 {/* 보상금 표시/편집 */}
-                 {isParent && editingItemId === item.id ? (
-                   <div className="flex items-center gap-1">
-                     <Input
-                       type="number"
-                       value={editingReward}
-                       onChange={(e) => setEditingReward(e.target.value)}
-                       onBlur={handleSaveEdit}
-                       onKeyDown={handleKeyDown}
-                       className="w-24 h-8 text-sm"
-                       min="0"
-                     />
-                     <span className="text-sm text-gray-500">원</span>
-                   </div>
+                  {/* 보상금 표시/편집 */}
+                  {isParent && editingItemId === item.id ? (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        value={editingReward}
+                        onChange={(e) => setEditingReward(e.target.value)}
+                        onBlur={handleSaveEdit}
+                        onKeyDown={handleKeyDown}
+                        className="w-24 h-8 text-sm"
+                        min="0"
+                      />
+                      <span className="text-sm text-gray-500">원</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteItem(item.id)}
+                        className="text-red-500 hover:text-red-700 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                  ) : (
                    <div
                      className={`flex items-center gap-2 ${isParent ? "cursor-pointer hover:opacity-80" : ""}`}

@@ -273,6 +273,25 @@ export function useChecklist() {
     });
   };
 
+  // 체크리스트 항목 삭제
+  const deleteItem = async (itemId: string) => {
+    if (!familyId) return;
+
+    const updatedItems = checklist.filter((item) => item.id !== itemId);
+
+    setChecklist(updatedItems);
+
+    const todayKey = getTodayKey();
+    const totalReward = updatedItems
+      .filter((item) => item.completed)
+      .reduce((sum, item) => sum + item.reward, 0);
+
+    await updateDoc(doc(db, "checklists", todayKey), {
+      [`${familyId}.items`]: updatedItems,
+      [`${familyId}.totalReward`]: totalReward,
+    });
+  };
+
   // 소비금액 업데이트 (더 이상 사용하지 않음, transactions 사용)
   const updateExpense = async (amount: number) => {
     if (!familyId) return;
@@ -300,6 +319,7 @@ export function useChecklist() {
     toggleItem,
     updateReward,
     updateItem,
+    deleteItem,
     addEvent,
     updateEvent,
     deleteEvent,
