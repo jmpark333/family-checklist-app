@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { doc, getDoc, updateDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { getTodayKey } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +139,41 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     try {
       const familyRef = doc(db, "families", familyId);
       await setDoc(familyRef, { checklistItems }, { merge: true });
+
+      const todayKey = getTodayKey();
+      const todayChecklistRef = doc(db, "checklists", todayKey);
+      
+      const todaySnap = await getDoc(todayChecklistRef);
+      let updatedTodayItems = checklistItems.map(item => ({ ...item, completed: false }));
+
+      if (todaySnap.exists()) {
+        const todayData = todaySnap.data();
+        const familyChecklist = todayData[familyId];
+        if (familyChecklist?.items) {
+          const existingItems = familyChecklist.items;
+          updatedTodayItems = checklistItems.map(newItem => {
+            const existingItem = existingItems.find((item: any) => item.id === newItem.id);
+            return {
+              ...newItem,
+              completed: existingItem?.completed || false
+            };
+          });
+        }
+      }
+
+      const totalReward = updatedTodayItems
+        .filter((item) => item.completed)
+        .reduce((sum, item) => sum + item.reward, 0);
+
+      await setDoc(todayChecklistRef, {
+        [familyId]: {
+          familyId,
+          date: todayKey,
+          items: updatedTodayItems,
+          totalReward
+        }
+      }, { merge: true });
+
       if (showAlert) {
         alert("체크리스트가 저장되었습니다.");
       }
