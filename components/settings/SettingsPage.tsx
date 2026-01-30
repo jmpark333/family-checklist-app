@@ -110,6 +110,12 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
     setChecklistItems(checklistItems.filter((item) => item.id !== id));
   };
 
+  const handleUpdateItemTitle = (id: string, title: string) => {
+    setChecklistItems(checklistItems.map((item) =>
+      item.id === id ? { ...item, title } : item
+    ));
+  };
+
   const handleUpdateItemReward = (id: string, reward: number) => {
     setChecklistItems(checklistItems.map((item) =>
       item.id === id ? { ...item, reward } : item
@@ -199,7 +205,11 @@ export function SettingsPage({ onClose }: SettingsPageProps) {
               <div className="space-y-2">
                 {checklistItems.map((item) => (
                   <div key={item.id} className="flex items-center gap-3 p-3 border rounded-lg">
-                    <span className="flex-1">{item.title}</span>
+                    <Input
+                      value={item.title}
+                      onChange={(e) => handleUpdateItemTitle(item.id, e.target.value)}
+                      className="flex-1"
+                    />
                     <div className="flex items-center gap-2">
                       <Label htmlFor={`reward-${item.id}`} className="text-sm">₩</Label>
                       <Input
