@@ -26,6 +26,7 @@ export function MiniCalendar() {
   // 월 이동
   const navigateMonth = (direction: "prev" | "next") => {
     const newMonth = new Date(currentMonth);
+    newMonth.setDate(1);
     const newMonthValue = newMonth.getMonth() + (direction === "next" ? 1 : -1);
     newMonth.setMonth(newMonthValue);
     setCurrentMonth(newMonth);
