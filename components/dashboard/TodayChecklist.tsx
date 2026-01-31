@@ -7,14 +7,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, Pencil, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Pencil, Trash2, Plus } from "lucide-react";
 
 export function TodayChecklist() {
   const { userData } = useAuth();
-  const { checklist, todayReward, loading, toggleItem, updateItem, deleteItem } = useChecklist();
+  const { checklist, todayReward, loading, toggleItem, updateItem, deleteItem, addItem } = useChecklist();
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [editingReward, setEditingReward] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newItemTitle, setNewItemTitle] = useState("");
+  const [newItemReward, setNewItemReward] = useState("5000");
 
   const isParent = userData?.role === "parent";
 
@@ -46,6 +49,26 @@ export function TodayChecklist() {
       setEditingItemId(null);
       setEditingTitle("");
       setEditingReward("");
+    }
+  };
+
+  const handleAddItem = async () => {
+    const reward = parseInt(newItemReward, 10);
+    if (newItemTitle.trim() && !isNaN(reward) && reward >= 0) {
+      await addItem(newItemTitle.trim(), reward);
+      setNewItemTitle("");
+      setNewItemReward("5000");
+      setShowAddForm(false);
+    }
+  };
+
+  const handleAddKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleAddItem();
+    } else if (e.key === "Escape") {
+      setShowAddForm(false);
+      setNewItemTitle("");
+      setNewItemReward("5000");
     }
   };
 
@@ -143,20 +166,61 @@ export function TodayChecklist() {
                    </div>
                  )}
               </div>
-            ))}
-          </div>
-        )}
-        {!isParent && (
-          <p className="text-sm text-gray-500 mt-4 text-center">
-            체크리스트는 부모님이 확인해주세요
-          </p>
-        )}
-        {isParent && (
-          <p className="text-xs text-gray-400 mt-2 text-center">
-            체크리스트는 부모님이 입력합니다.
-          </p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
+             ))}
+             {isParent && (
+               <div className="pt-3 border-t">
+                 {showAddForm ? (
+                   <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                     <Input
+                       value={newItemTitle}
+                       onChange={(e) => setNewItemTitle(e.target.value)}
+                       onKeyDown={handleAddKeyDown}
+                       placeholder="새 항목"
+                       className="flex-1 h-8"
+                       autoFocus
+                     />
+                     <Input
+                       type="number"
+                       value={newItemReward}
+                       onChange={(e) => setNewItemReward(e.target.value)}
+                       onKeyDown={handleAddKeyDown}
+                       placeholder="보상"
+                       className="w-20 h-8"
+                       min="0"
+                     />
+                     <Button size="sm" onClick={handleAddItem} className="h-8">
+                       추가
+                     </Button>
+                     <Button size="sm" variant="ghost" onClick={() => setShowAddForm(false)} className="h-8">
+                       취소
+                     </Button>
+                   </div>
+                 ) : (
+                   <Button
+                     variant="outline"
+                     size="sm"
+                     onClick={() => setShowAddForm(true)}
+                     className="w-full"
+                   >
+                     <Plus className="w-4 h-4 mr-2" />
+                     항목 추가
+                   </Button>
+                 )}
+               </div>
+             )}
+           </div>
+         )}
+         {!isParent && (
+           <p className="text-sm text-gray-500 mt-4 text-center">
+             체크리스트는 부모님이 확인해주세요
+           </p>
+         )}
+         {isParent && (
+           <p className="text-xs text-gray-400 mt-2 text-center">
+             체크리스트는 부모님이 입력합니다.
+           </p>
+         )}
+       </CardContent>
+     </Card>
+   );
+ }
