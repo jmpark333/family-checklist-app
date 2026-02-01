@@ -65,6 +65,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // 사용자 데이터 저장
     await setDoc(doc(db, "users", user.uid), newUserData);
+
+    // 부모가 가입할 때는 가족 설정 문서 생성 (기본 체크리스트 항목 포함)
+    if (role === "parent") {
+      const defaultChecklistItems = [
+        { id: "1", title: "7시 전 기상", reward: 5000 },
+        { id: "2", title: "8시 전 나가기", reward: 5000 },
+        { id: "3", title: "모든 약속은 미리 소통하고 결정하기", reward: 5000 },
+        { id: "4", title: "반말 안하기, 말 예쁘게 하기", reward: 5000 },
+      ];
+
+      await setDoc(doc(db, "families", familyId), {
+        checklistItems: defaultChecklistItems,
+        resetDay: 1,
+      });
+    }
+
     setUserData(newUserData);
   }
 
