@@ -41,6 +41,11 @@ export function useChecklist() {
         { id: "3", title: "모든 약속은 미리 소통하고 결정하기", reward: 5000 },
         { id: "4", title: "반말 안하기, 말 예쁘게 하기", reward: 5000 },
       ];
+
+      // 기본값을 families 컬렉션에도 저장하여 다음 날부터 유지되도록 함
+      if (familySnap.exists()) {
+        await setDoc(familyRef, { checklistItems: templateItems }, { merge: true });
+      }
     }
 
     const defaultItems: ChecklistItem[] = templateItems.map((item) => ({
